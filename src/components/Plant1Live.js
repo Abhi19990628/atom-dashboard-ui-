@@ -778,37 +778,47 @@ export default function Plant1Live() {
 
   // Fetch data from API
   const fetchCorrectData = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/api/plant1-live/`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  try {
+    const response = await fetch(`${API_BASE}/api/plant1-live/`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
       }
-      
-      const data = await response.json();
-      
-      if (data.success && Array.isArray(data.machines)) {
-        setMachines(data.machines);
-        setError('');
-      } else {
-        setError(data.error || 'API returned error');
-        setMachines([]);
-      }
-    } catch (error) {
-      console.error('❌ Fetch error:', error);
-      setError(`Connection Error: ${error.message}`);
-      setMachines([]);
-    } finally {
-      setLoading(false);
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-  };
+    
+    // ✅ CHECK CONTENT TYPE BEFORE PARSING
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('❌ Non-JSON response:', text.substring(0, 200));
+      throw new Error('Server returned HTML instead of JSON. Check backend settings.');
+    }
+    
+    const data = await response.json();
+    
+    if (data.success && Array.isArray(data.machines)) {
+      setMachines(data.machines);
+      setError('');
+      console.log('✅ Data loaded:', data.machines.length, 'machines');
+    } else {
+      setError(data.error || 'API returned error');
+      setMachines([]);
+    }
+  } catch (error) {
+    console.error('❌ Fetch error:', error);
+    setError(`Connection Error: ${error.message}`);
+    setMachines([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 
   // Check hour change
