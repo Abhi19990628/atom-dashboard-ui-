@@ -777,27 +777,32 @@ export default function Plant1Live() {
 
 
   // Fetch data from API
-  const fetchCorrectData = async () => {
+  
+  // Fetch data from API (Lines 35-68)
+const fetchCorrectData = async () => {
   try {
     const response = await fetch(`${API_BASE}/api/plant1-live/`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache'
-      }
+        'Cache-Control': 'no-cache',
+        'ngrok-skip-browser-warning': 'true'  // Skip ngrok warning page
+      },
+      mode: 'cors',
+      credentials: 'include'
     });
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     
-    // ✅ CHECK CONTENT TYPE BEFORE PARSING
+    // Validate content type
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const text = await response.text();
-      console.error('❌ Non-JSON response:', text.substring(0, 200));
-      throw new Error('Server returned HTML instead of JSON. Check backend settings.');
+      console.error('❌ Server returned HTML:', text.substring(0, 300));
+      throw new Error('Backend returned HTML instead of JSON. Check REST_FRAMEWORK settings.');
     }
     
     const data = await response.json();
@@ -805,13 +810,13 @@ export default function Plant1Live() {
     if (data.success && Array.isArray(data.machines)) {
       setMachines(data.machines);
       setError('');
-      console.log('✅ Data loaded:', data.machines.length, 'machines');
+      console.log(`✅ Loaded ${data.machines.length} machines`);
     } else {
-      setError(data.error || 'API returned error');
+      setError(data.error || 'Invalid API response structure');
       setMachines([]);
     }
   } catch (error) {
-    console.error('❌ Fetch error:', error);
+    console.error('❌ Fetch error:', error.message);
     setError(`Connection Error: ${error.message}`);
     setMachines([]);
   } finally {
