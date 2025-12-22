@@ -64,8 +64,8 @@ function Plant2LiveModal({ machine, onClose }) {
                         <span className="value">{machine.shut_height}</span>
                     </div>
                     <div className="info-item">
-                        <span className="label">Total Idle:</span>
-                        <span className="value">{machine.hourly_idle_total} min</span>
+                        <span className="label">Ideal Time:</span>
+                        <span className="value">{machine.total_shift_idle_time} min</span>
                     </div>
                     <div className="info-item">
                         <span className="label">Status:</span>

@@ -174,7 +174,7 @@ function Plant1LiveModal({ machine, onClose }) {
                 {/* PRODUCTION STATS */}
                 <div className="stats-section">
                     <div className="stat-box">
-                        <div className="stat-label">Last Hour</div>
+                        <div className="stat-label">Last Hour production</div>
                         <div className="stat-value">{machine.last_hour_count || 0}</div>
                     </div>
                     <div className="stat-box">
@@ -184,9 +184,9 @@ function Plant1LiveModal({ machine, onClose }) {
                         </div>
                     </div>
                     <div className="stat-box">
-                        <div className="stat-label">Idle Time</div>
+                        <div className="stat-label">Idle Time In This Shift</div>
                         <div className="stat-value" style={{ color: '#f59e0b' }}>
-                            {machine.hourly_idle_total || 0} min
+                            {machine.total_shift_idle_time || 0} min
                         </div>
                     </div>
                 </div>

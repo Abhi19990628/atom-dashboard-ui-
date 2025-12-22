@@ -415,7 +415,12 @@ export default function Plant2Live() {
       }}>
         {sortedMachines.map((machine) => {
           const liveIdle = liveIdleSeconds[machine.machine_no] || 0;
-          const totalIdleMinutes = machine.idle_time || 0; // ✅ Use backend value
+          const totalIdleMinutes = machine.total_shift_idle_time ||0;
+
+
+
+
+
           
           return (
             <div
@@ -1444,7 +1449,7 @@ export default function Plant2Live() {
                     fontWeight: 'bold',
                     color: '#f59e0b'
                   }}>
-                    {selectedMachine.idle_time || 0} min
+                    {selectedMachine.total_shift_idle_time || 0} min
                   </div>
                 </div>
               </div>
