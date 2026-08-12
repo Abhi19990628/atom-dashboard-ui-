@@ -483,6 +483,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
 import { toast } from "react-toastify";
+import { useUser } from "../../src/context/UserContext";
 
 export default function Auth({ onLogin }) {
   const navigate = useNavigate();
@@ -505,6 +506,7 @@ export default function Auth({ onLogin }) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const { setUser } = useUser();
 
   // 🚀 STEP 1: REQUEST OTP (Head ko OTP bhejega)
   const handleRequestOTP = async (e) => {
@@ -626,7 +628,13 @@ export default function Auth({ onLogin }) {
         localStorage.setItem('access_token', data.access);
         localStorage.setItem('refresh_token', data.refresh);
         localStorage.setItem('user_role', data.role);
-        localStorage.setItem('username', username);
+        localStorage.setItem('username', data.username);
+        setUser({
+  fullName: data.username,
+  email: data.username,
+  profileImage: "",
+  role: data.role,
+});
         toast.success(`Welcome ${username} to AtomOne Dashboard 🚀`);
 
         if (onLogin) onLogin();

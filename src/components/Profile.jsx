@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Edit, Save, Camera, Check, Upload, X } from "lucide-react";
 import Sidebar from "./Sidebar";
+import { useUser } from "../../src/context/UserContext";
 
 export default function Profile({ onLogout }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -41,7 +42,10 @@ export default function Profile({ onLogout }) {
     designation: "",
   });
 
+
+const { setUser } = useUser();
   const API_URL = "http://192.168.0.34:8000/api/profile/me/";
+  console.log("Auth Token:", authToken);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -59,6 +63,7 @@ export default function Profile({ onLogout }) {
         }
 
         const data = await response.json();
+        console.log("Profile API Response:", data);
         localStorage.setItem("full_name", data.full_name || "");
         if (data.profile_image) {
           localStorage.setItem("profile_image", data.profile_image);
@@ -222,6 +227,20 @@ ${error.message}`
       }
 
       const updatedData = await response.json();
+
+      setUser({
+  fullName: updatedData.full_name || updatedData.username || "User",
+  email:
+    updatedData.contact_email ||
+    updatedData.email ||
+    profileData.email,
+  profileImage: updatedData.profile_image || "",
+  role: updatedData.role || updatedData.user_role || "",
+  department: updatedData.department || "",
+  designation: updatedData.designation || "",
+  phone: updatedData.mobile_no || "",
+  location: updatedData.location || "",
+});
 
       setProfileData((prev) => ({
         ...prev,

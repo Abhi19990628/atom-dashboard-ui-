@@ -27,6 +27,7 @@ import {
   Lock,
   BarChart3,
 } from "lucide-react";
+import { useUser } from "../../src/context/UserContext";
 import { useRef } from "react";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
@@ -66,6 +67,7 @@ export default function Sidebar({ onLogout }) {
         );
 
         const data = await res.json();
+      
 
         if (res.ok && data.notifications) {
           const currentCount = data.notifications.length;
@@ -153,17 +155,18 @@ export default function Sidebar({ onLogout }) {
 
   const fullLogo = "/logo1.jpg";
   const smallLogo = "/bhai.jpg";
-  const userRole = localStorage.getItem("user_role");
-  const userName = localStorage.getItem("username");
-  const fullName = localStorage.getItem("full_name");
-  const profileImage = localStorage.getItem("profile_image");
+  // const userRole = localStorage.getItem("user_role");
+  // const userName = localStorage.getItem("username");
+  // const fullName = localStorage.getItem("full_name");
+  // const profileImage = localStorage.getItem("profile_image");
+  const { user } = useUser();
   const hasAccess = (path) => {
     // Admin can access everything
-    if (userRole === "Admin") {
+    if (user?.role === "Admin") {
       return true;
     }
 
-    switch (userRole) {
+    switch (user?.role) {
       case "QA_Hub":
         return ["/dashboard", "/qa-hub", "/qms"].includes(path);
 
@@ -894,17 +897,30 @@ ${
                     screenInfo.isIPadMini ? "w-8 h-8" : "w-10 h-10"
                   }`}
                 >
-                  <img
-                    src={profileImage || "/default-avatar.png"}
+                  {user?.profileImage ? (
+  <img
+    src={user.profileImage}
+    alt="Profile"
+    className="w-full h-full object-cover"
+  />
+) : (
+  <div className="w-full h-full flex items-center justify-center bg-indigo-600 text-white font-bold text-lg">
+    {(user?.fullName || user?.email || "U")
+      .charAt(0)
+      .toUpperCase()}
+  </div>
+)}
+                  {/* <img
+                     src={user?.profileImage || "/default-avatar.png"}
                     alt="Profile"
                     className="w-full h-full object-cover"
-                  />
+                  /> */}
                 </div>
               </div>
 
               <div className="flex-1 min-w-0 relative z-10 pt-3 pl-5">
                 <p className="text-slate-200 text-base truncate font-medium">
-                  {fullName || userName}{" "}
+                 {user?.fullName || "User"}
                 </p>
               </div>
 
@@ -937,7 +953,7 @@ ${
                 }`}
               >
                 <img
-                  src={profileImage || "/default-avatar.png"}
+                 src={user?.profileImage || "/default-avatar.png"}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />

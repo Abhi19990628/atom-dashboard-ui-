@@ -40,6 +40,7 @@ import {
   getProductionLineStatusData, 
   getAvailableDates 
 } from '../services/apiService';
+import { useUser } from "../../src/context/UserContext";
 
 ChartJS.register(
   CategoryScale,
@@ -114,6 +115,49 @@ const Dashboard = ({ onLogout }) => {
   // 🔥 CHECK ROLE (WORKER OR ADMIN)
   const userRole = localStorage.getItem('user_role');
   const isWorker = userRole === 'QA_Hub' || userRole === 'Production_Hub' || userRole === 'Maintenance_Hub';
+
+  const { setUser } = useUser();
+
+useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      const token =
+        localStorage.getItem("access_token") ||
+        localStorage.getItem("token");
+
+      if (!token) return;
+
+      const response = await fetch(`${API_BASE}/api/profile/me/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+
+      setUser({
+        fullName: data.full_name || data.username || "User",
+        email:
+          data.contact_email ||
+          data.email ||
+          localStorage.getItem("username"),
+        profileImage: data.profile_image || "",
+        role: data.role || data.user_role || "",
+        department: data.department || "",
+        designation: data.designation || "",
+        phone: data.mobile_no || "",
+        location: data.location || "",
+      });
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchProfile();
+}, [setUser]);
 
   // Trigger entrance animation when component mounts
   useEffect(() => {
