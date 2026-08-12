@@ -338,7 +338,7 @@ function App() {
             }
           />
           <Route
-            path="/assignment"
+            path="/assign-machine"
             element={
               <ProtectedRoute adminOnly={true}>
                 <AssignMachine onLogout={handleLogout} />

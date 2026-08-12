@@ -8,8 +8,7 @@ import axios from "axios";
 const BeltGrinderMaintenanceForm = () => {
   const navigate = useNavigate();
   const [isChecklistOpen, setIsChecklistOpen] = useState(true);
-  const statusOptions = ["", "Ok", "Not Ok", "N/A"];
-
+  const statusOptions = ["", "Ok", "Not Ok", "N/A"];  
   // --- BELT GRINDER CHECKLIST DATA ---
   const initialChecklist = [
     {

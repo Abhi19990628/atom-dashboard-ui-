@@ -1,3 +1,5 @@
+// 
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom'; 
 
@@ -33,7 +35,7 @@ const IDLE_REASONS = {
   ]
 };
 
-const CATEGORY_ICONS = {
+const CATEGORY_ICONS = {  
   "Tool Breakdown": "bi bi-hammer",
   "Machine Breakdown": "bi bi-lightning-charge-fill",
   "Machine Maintenance": "bi bi-gear-fill",
@@ -155,6 +157,10 @@ export default function Plant2Live() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState(''); 
   const [historyDate, setHistoryDate] = useState(new Date().toISOString().split('T')[0]);
+  const [historyShift, setHistoryShift] = useState('A');
+  const [historySummary, setHistorySummary] = useState(null);
+  const [historyHourlySummary, setHistoryHourlySummary] = useState([]);
+  const [historyMachineMeta, setHistoryMachineMeta] = useState(null);
 
   const [currentHour, setCurrentHour] = useState(new Date().getHours());
   const [isMounted, setIsMounted] = useState(false);
@@ -168,7 +174,6 @@ export default function Plant2Live() {
   const [idleRemarks, setIdleRemarks] = useState('');
   const [isSubmittingReason, setIsSubmittingReason] = useState(false);
   
-  // 🔥 FIX 1: UI Status ko LocalStorage mein daal diya taaki REFRESH hone pe data gayab na ho
   const [reasonLoggedStates, setReasonLoggedStates] = useState(() => {
     try {
       const saved = localStorage.getItem('reasonLoggedStates_plant2');
@@ -177,7 +182,6 @@ export default function Plant2Live() {
     return {};
   });
 
-  // Hamesha LocalStorage ko updated rakhega
   useEffect(() => {
     localStorage.setItem('reasonLoggedStates_plant2', JSON.stringify(reasonLoggedStates));
   }, [reasonLoggedStates]);
@@ -189,6 +193,122 @@ export default function Plant2Live() {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${String(secs).padStart(2, '0')}`;
+  };
+
+  // ✅ Ideal time display helper
+  // DB/API ideal_time seconds me rakhega. UI me readable format show karenge.
+  const formatIdealDuration = (seconds, hideSeconds = false) => {
+    const totalSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+
+    if (hideSeconds) {
+      if (hrs > 0) return `${hrs} hr ${mins} min`;
+      return `${mins} min`;
+    }
+
+    if (hrs > 0) return `${hrs} hr ${mins} min ${secs} sec`;
+    if (mins > 0) return `${mins} min ${secs} sec`;
+    return `${secs} sec`;
+  };
+
+  const formatShutHeightDisplay = (value) => {
+    if (value === null || value === undefined || value === '' || value === 'No data' || value === 'N/A') {
+      return '--';
+    }
+
+    const raw = String(value).trim();
+    if (raw.toLowerCase().includes('fail')) return 'Failed';
+
+    const num = Number(raw);
+    if (Number.isFinite(num)) {
+      // MQTT/cache miss 0.01 / 1.01 type reading ko UI me Failed show karna hai.
+      if (num > 0 && num <= 10) return 'Failed';
+      if (num <= 0) return '--';
+      return num.toFixed(2);
+    }
+
+    return raw;
+  };
+
+  const getNumberValue = (...values) => {
+    for (const value of values) {
+      const num = Number(value);
+      if (Number.isFinite(num)) return num;
+    }
+    return 0;
+  };
+
+  // ✅ Requirement:
+  // Machine ON hai  -> Online Ideal show hoga
+  // Machine OFF hai -> Offline Ideal show hoga
+  const getVisibleIdealMode = (machine) => {
+    return machine?.machine_on ? 'ONLINE' : 'OFFLINE';
+  };
+
+  const getVisibleIdealLabel = (machine) => {
+    return machine?.machine_on ? 'Online Ideal' : 'Offline Ideal';
+  };
+
+  // ✅ Current shift ka mode-wise ideal use karo.
+  // total shift combined yahan show nahi karenge; wo baad me alag component/page me hoga.
+  const getModeIdealBaseSeconds = (machine, mode) => {
+    if (!machine) return 0;
+
+    if (mode === 'ONLINE') {
+      return getNumberValue(
+        machine.online_ideal_shift,
+        machine.online_ideal_today,
+        machine.online_ideal_this_hour,
+        0
+      );
+    }
+
+    return getNumberValue(
+      machine.offline_ideal_shift,
+      machine.offline_ideal_today,
+      machine.offline_ideal_this_hour,
+      0
+    );
+  };
+
+  // ✅ Live timer chal raha ho to same mode ke total me FE live seconds add hote rahenge.
+  // Backend API fetch-time par live_ideal_time include kar sakti hai, isliye apiLive minus karke current FE live add karte hain.
+  const getVisibleIdealSeconds = (machine, currentLiveSeconds = 0) => {
+    if (!machine) return 0;
+
+    const visibleMode = getVisibleIdealMode(machine);
+    const baseSeconds = getModeIdealBaseSeconds(machine, visibleMode);
+
+    const feLive = Number(currentLiveSeconds || 0) || 0;
+    const apiLive = Number(machine.live_ideal_time || 0) || 0;
+    const apiLiveMode = machine.live_ideal_mode || visibleMode;
+
+    if (!machine.is_producing && feLive > 0 && apiLiveMode === visibleMode) {
+      return Math.max(0, baseSeconds - apiLive + feLive);
+    }
+
+    return Math.max(0, baseSeconds);
+  };
+
+  const getVisibleIdealDisplay = (machine, currentLiveSeconds = 0) => {
+    const isLiveIdealRunning = machine && !machine.is_producing && Number(currentLiveSeconds || 0) > 0;
+
+    // Live timer ke time total ideal me seconds tick-tick nahi dikhayenge.
+    // Running/offline live hatne ke baad exact seconds show honge.
+    return formatIdealDuration(
+      getVisibleIdealSeconds(machine, currentLiveSeconds),
+      isLiveIdealRunning
+    );
+  };
+
+  // ✅ Safe comparison helper: backend kabhi number, kabhi string bhej sakta hai
+  const sameMachine = (a, b) => String(a) === String(b);
+
+  const getSafeCount = (value) => {
+    const count = Number(value);
+    return Number.isFinite(count) ? count : 0;
   };
 
   const getMachineStatus = (m) => {
@@ -243,21 +363,18 @@ export default function Plant2Live() {
             setMachines(data.machines); 
             setError(''); 
 
-            // 🔥 FIX: selectedMachine ko bhi fresh data se update karo
             setSelectedMachine(prev => {
               if (!prev) return null;
-              const updated = data.machines.find(m => m.machine_no === prev.machine_no);
+              const updated = data.machines.find(m => sameMachine(m.machine_no, prev.machine_no));
               return updated || prev;
             });
 
             setReasonLoggedStates(prev => {
                 const newState = { ...prev };
                 data.machines.forEach(m => {
-                    // Agar backend se pending hai, toh add karo
                     if (m.has_pending_reason) {
                         newState[m.machine_no] = m.machine_on ? 'IDLE' : 'OFFLINE';
                     } 
-                    // Agar machine produce karne lag jaye, toh localstate saaf kar do
                     else if (m.is_producing || (newState[m.machine_no] === 'OFFLINE' && m.machine_on)) {
                         delete newState[m.machine_no];
                     }
@@ -273,28 +390,107 @@ export default function Plant2Live() {
     }
   };
 
+  // ✅ Initial load + safety polling
+  // WebSocket realtime update dega, polling backup hai agar network ke wajah se koi update miss ho.
   useEffect(() => {
     if (!isMounted) return;
-    let isFetching = false;
-    let timerId;
 
-    const pollData = async () => {
-      if (isFetching) return; 
-      
-      if (showHistoryView) {
-        timerId = setTimeout(pollData, 2000);
-        return;
-      }
-      isFetching = true;
-      await fetchData();
-      isFetching = false;
+    fetchData();
 
-      if (isMounted) timerId = setTimeout(pollData, 2000);
+    const refreshInterval = setInterval(() => {
+      fetchData();
+    }, 5000);
+
+    return () => clearInterval(refreshInterval);
+  }, [isMounted]);
+
+  // =================================================================================
+  // 🔥 NAYA WEBSOCKET LOGIC (Auto-Reconnect ke sath)
+  // =================================================================================
+  useEffect(() => {
+    let ws;
+    let reconnectTimer;
+
+    const connectWebSocket = () => {
+      const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+      const ws_base = API_BASE.replace(/^http/, ws_scheme).replace(/\/$/, "");
+      ws = new WebSocket(`${ws_base}/ws/plant2/live/`);
+
+      ws.onopen = () => {
+        console.log("✅ WebSocket Connected! Dashboard is Live.");
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const response = JSON.parse(event.data);
+
+          if (response.type === 'realtime_update') {
+            const liveData = response.data;
+            const liveMachineNo = liveData.machine_no;
+            const currentHourCountFromDb = getSafeCount(liveData.current_hour_count);
+            const cumulativeCountFromDb = getSafeCount(liveData.cumulative_count);
+
+            console.log("🔥 LIVE DATA AAYA:", liveData);
+
+            setMachines(prevMachines => {
+               // Agar initial data abhi load nahi hua, toh ignore karo.
+               // 5 sec polling initial data load kar dega.
+               if (prevMachines.length === 0) return prevMachines;
+
+               return prevMachines.map(m => 
+                  sameMachine(m.machine_no, liveMachineNo)
+                    ? { 
+                        ...m, 
+                        current_hour_count: currentHourCountFromDb,
+                        cumulative_count: cumulativeCountFromDb,
+                        machine_on: true,
+                        is_producing: true,
+                        last_activity: new Date().toLocaleTimeString('en-GB', { hour12: false })
+                      } 
+                    : m
+               );
+            });
+
+            setSelectedMachine(prev => {
+              if (prev && sameMachine(prev.machine_no, liveMachineNo)) {
+                  return {
+                    ...prev,
+                    current_hour_count: currentHourCountFromDb,
+                    cumulative_count: cumulativeCountFromDb,
+                    machine_on: true,
+                    is_producing: true,
+                    last_activity: new Date().toLocaleTimeString('en-GB', { hour12: false })
+                  };
+              }
+              return prev;
+            });
+          }
+        } catch (err) {
+          console.error("❌ WebSocket message parse/update error:", err);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error("⚠️ WebSocket Error:", error);
+      };
+
+      ws.onclose = () => {
+        console.log("❌ WebSocket Disconnected. Reconnecting in 3 seconds...");
+        reconnectTimer = setTimeout(connectWebSocket, 3000);
+      };
     };
 
-    pollData();
-    return () => clearTimeout(timerId);
-  }, [isMounted, showHistoryView]);
+    connectWebSocket();
+
+    return () => {
+      clearTimeout(reconnectTimer);
+      if (ws) {
+        ws.onclose = null; 
+        ws.close();
+      }
+    };
+  }, []); 
+  // =================================================================================
 
   useEffect(() => {
     const idleTimer = setInterval(() => {
@@ -356,37 +552,61 @@ export default function Plant2Live() {
     return () => clearInterval(idleTimer);
   }, [machines, currentHour]);
 
+  // ✅ Hour change frontend reset
+  // Important:
+  // Frontend se save-hourly-snapshot API call nahi karna.
+  // Agar dashboard 5 systems par open hai to 5 baar snapshot hit ho sakta hai.
+  // Backend already hourly tracker chala raha hai.
+  //
+  // Requirement:
+  // Hour change hote hi sab machines ka current_hour_count 0 dikhna chahiye,
+  // count aaye ya na aaye. Next count aayega to DB se exact 1/2/3... update ho jayega.
   useEffect(() => {
-    const checkHourChange = async () => {
+    const checkHourChange = () => {
       const now = new Date();
       const hour = now.getHours();
-      const minutes = now.getMinutes();
-      const seconds = now.getSeconds();
-      
-      if (minutes === 0 && seconds <= 5 && lastSavedHour.current !== hour) {
-        try {
-          const response = await fetch(`${API_BASE}/api/save-hourly-snapshot/`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }
-          });
-          const data = await response.json();
-          if (data.success) {
-            setLiveIdleSeconds({});
-            lastSavedHour.current = hour;
-            setCurrentHour(hour);
-            setTimeout(() => { fetchData(); }, 1000);
-          }
-        } catch (error) { console.error('❌ Request error:', error); }
+
+      if (lastSavedHour.current !== hour) {
+        console.log(`⏰ Hour changed ${lastSavedHour.current} → ${hour}. Resetting current hour counts to 0.`);
+
+        lastSavedHour.current = hour;
+        setCurrentHour(hour);
+        setLiveIdleSeconds({});
+
+        setMachines(prevMachines =>
+          prevMachines.map(machine => ({
+            ...machine,
+            last_hour_count: getSafeCount(machine.current_hour_count),
+            current_hour_count: 0
+          }))
+        );
+
+        setSelectedMachine(prev =>
+          prev
+            ? {
+                ...prev,
+                last_hour_count: getSafeCount(prev.current_hour_count),
+                current_hour_count: 0
+              }
+            : prev
+        );
+
+        // Backend se confirm/sync kar lo.
+        // Agar hour ke first seconds me count already insert ho gaya ho, UI exact DB count le lega.
+        setTimeout(() => fetchData(), 1500);
+        setTimeout(() => fetchData(), 5000);
       }
     };
+
     const hourCheckInterval = setInterval(checkHourChange, 1000);
     return () => clearInterval(hourCheckInterval);
-  }, []);
+  }, [isMounted]);
 
   const checkLunchTime = () => {
     const now = new Date();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
-    return hour === 12 && minute >= 30;
+    const mins = now.getHours() * 60 + now.getMinutes();
+    // Plant 2 lunch time: 12:15 PM to 12:45 PM
+    return mins >= (12 * 60 + 15) && mins < (12 * 60 + 45);
   };
 
   const handleMachineClick = (machine) => {
@@ -421,22 +641,37 @@ export default function Plant2Live() {
   }, [location.state, machines, navigate, location.pathname]);
 
 
-  const fetchMachineHistory = (machineNo, dateStr) => {
+  const fetchMachineHistory = (machineNo, dateStr, shiftVal = historyShift) => {
     setHistoryLoading(true);
     setHistoryError(''); 
     
-    fetch(`${API_BASE}/api/machine-history/?plant_no=2&machine_no=${machineNo}&date=${dateStr}`)
+    fetch(`${API_BASE}/api/machine-history/?plant_no=2&machine_no=${machineNo}&date=${dateStr}&shift=${shiftVal}`)
       .then(res => {
           if (!res.ok) throw new Error(`Server API Error: ${res.status}`);
           return res.json();
       })
       .then(data => {
-        if (data.success) { setHistoryData(data.events); } 
-        else { setHistoryData([]); setHistoryError(data.error || 'API returned success: false'); }
+        if (data.success) { 
+          setHistoryData(data.events || []);
+          setHistorySummary(data.summary || null);
+          setHistoryHourlySummary(data.hourly_summary || []);
+          setHistoryMachineMeta(data.machine_meta || null);
+        } 
+        else { 
+          setHistoryData([]);
+          setHistorySummary(null);
+          setHistoryHourlySummary([]);
+          setHistoryMachineMeta(null);
+          setHistoryError(data.error || 'API returned success: false');
+        }
       })
       .catch(err => {
         console.error('Error fetching history:', err);
-        setHistoryData([]); setHistoryError(err.message);
+        setHistoryData([]);
+        setHistorySummary(null);
+        setHistoryHourlySummary([]);
+        setHistoryMachineMeta(null);
+        setHistoryError(err.message);
       })
       .finally(() => setHistoryLoading(false));
   };
@@ -444,7 +679,7 @@ export default function Plant2Live() {
   const toggleHistoryView = () => {
     const newShowHistory = !showHistoryView;
     setShowHistoryView(newShowHistory);
-    if (newShowHistory && selectedMachine) fetchMachineHistory(selectedMachine.machine_no, historyDate);
+    if (newShowHistory && selectedMachine) fetchMachineHistory(selectedMachine.machine_no, historyDate, historyShift);
   };
 
   const closeModal = () => {
@@ -452,6 +687,10 @@ export default function Plant2Live() {
     setMachineChanges([]);
     setShowChanges(false);
     setShowHistoryView(false);
+    setHistoryData([]);
+    setHistorySummary(null);
+    setHistoryHourlySummary([]);
+    setHistoryMachineMeta(null);
     setIdleCategory('');
     setCustomCategory(''); 
     setIdleSubReason('');
@@ -465,9 +704,6 @@ export default function Plant2Live() {
     (idleSubReason !== 'Other' || idleRemarks.trim() !== '');
 
 
-  // =================================================================================
-  // 🔥 FIX 2: POWERFUL NOTIFICATION CLEARER - Promise.all ke saath tez aur exact match
-  // =================================================================================
   const clearNotificationsForMachine = async (machineNo) => {
     try {
       const token = localStorage.getItem('access_token');
@@ -483,14 +719,12 @@ export default function Plant2Live() {
         
         const machineNotifs = data.data.filter(n => {
            if (n.is_read) return false;
-           // Db me 'Machine-03' ho ya '3', dono ko proper int me convert kar dega
            const dbNumMatch = String(n.machine_no).match(/\d+/);
            const dbNum = dbNumMatch ? parseInt(dbNumMatch[0], 10) : null;
            
            return dbNum === targetNum;
         });
         
-        // Ek saath saari pakdi gayi notifications ko API se uda do
         await Promise.all(machineNotifs.map(n => 
           fetch(`${API_BASE}/api/read-notification/${n.id}/`, {
             method: 'POST',
@@ -541,7 +775,6 @@ export default function Plant2Live() {
 
       const data = await response.json();
       
-      // 🔥 FIX 3: Pehle 'clearNotifications' ko chalne do aur ruko (await lagaya hai)
       await clearNotificationsForMachine(selectedMachine.machine_no);
 
       if (data.success || !data.success) { 
@@ -566,7 +799,19 @@ export default function Plant2Live() {
     }
   };
 
-  const eventIcons = { 'ON': '🟢', 'OFF': '🔴', 'SHUT_HEIGHT_CHANGE': '🔧', 'TOOL_CHANGE': '⚙️' };
+  const eventIcons = {
+    'ON': '🟢',
+    'OFF': '🔴',
+    'SHUT_HEIGHT_CHANGE': '🔧',
+    'TOOL_CHANGE': '⚙️',
+    'SHIFT_START': '🏁',
+    'SHIFT_END': '🏁',
+    'LUNCH_START': '🍽️',
+    'LUNCH_END': '✅',
+    'HOUR_SUMMARY': '📊',
+    'IDEAL_ONLINE': '🟠',
+    'IDEAL_OFFLINE': '⚫'
+  };
 
   const totalMachines = machines.length;
   const onMachines = machines.filter(m => m.machine_on).length;
@@ -693,8 +938,8 @@ export default function Plant2Live() {
               )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div style={{ padding: '12px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px' }}><div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>Total Idle (Hour)</div><div style={{ fontSize: '16px', fontWeight: '800', color: '#fbbf24' }}>{machine.total_shift_idle_time || 0} min</div></div>
-                <div style={{ padding: '12px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px' }}><div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>Shut Height</div><div style={{ fontSize: '16px', fontWeight: '800', color: '#f8fafc' }}>{typeof machine.shut_height === 'number' ? machine.shut_height.toFixed(2) : machine.shut_height || '--'}</div></div>
+                <div style={{ padding: '12px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px' }}><div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>{getVisibleIdealLabel(machine)}</div><div style={{ fontSize: '16px', fontWeight: '800', color: '#fbbf24' }}>{getVisibleIdealDisplay(machine, liveIdle)}</div></div>
+                <div style={{ padding: '12px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px' }}><div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>Shut Height</div><div style={{ fontSize: '16px', fontWeight: '800', color: '#f8fafc' }}>{formatShutHeightDisplay(machine.shut_height)}</div></div>
                 <div style={{ padding: '12px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px' }}><div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>Last Hour</div><div style={{ fontSize: '16px', fontWeight: '800', color: '#94a3b8' }}>{machine.last_hour_count || 0}</div></div>
                 <div style={{ padding: '12px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px' }}><div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>Cumulative</div><div style={{ fontSize: '16px', fontWeight: '800', color: '#10b981' }}>{machine.cumulative_count || 0}</div></div>
               </div>
@@ -722,35 +967,136 @@ export default function Plant2Live() {
 
             {showHistoryView ? (
               <div style={{ padding: '30px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                    <h2 style={{ margin: 0, color: '#f8fafc' }}>Events Timeline</h2>
-                    <input type="date" value={historyDate} onChange={(e) => { setHistoryDate(e.target.value); fetchMachineHistory(selectedMachine.machine_no, e.target.value); }} style={{ padding: '10px 15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: '#1e293b', color: 'white', fontFamily: 'inherit', fontWeight: 'bold' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '15px', flexWrap: 'wrap' }}>
+                    <div>
+                      <h2 style={{ margin: 0, color: '#f8fafc' }}>Shift Wise History</h2>
+                      <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>Lunch: 12:15 PM - 12:45 PM | Shift A End: 08:00 PM</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <select value={historyShift} onChange={(e) => { setHistoryShift(e.target.value); fetchMachineHistory(selectedMachine.machine_no, historyDate, e.target.value); }} style={{ padding: '10px 15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: '#1e293b', color: 'white', fontFamily: 'inherit', fontWeight: 'bold' }}>
+                        <option value="A">Shift A</option>
+                        <option value="B">Shift B</option>
+                        <option value="ALL">Full Day</option>
+                      </select>
+                      <input type="date" value={historyDate} onChange={(e) => { setHistoryDate(e.target.value); fetchMachineHistory(selectedMachine.machine_no, e.target.value, historyShift); }} style={{ padding: '10px 15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: '#1e293b', color: 'white', fontFamily: 'inherit', fontWeight: 'bold' }} />
+                    </div>
                 </div>
                 {historyError ? (
                     <div style={{ textAlign: 'center', padding: '50px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '16px', border: '1px dashed rgba(239, 68, 68, 0.3)' }}><div style={{ fontSize: '40px', marginBottom: '10px' }}>⚠️</div><h3 style={{ color: '#ef4444', margin: 0 }}>API Connection Error</h3><p style={{ color: '#fca5a5', fontSize: '14px' }}>{historyError}</p></div>
                 ) : historyLoading ? (
-                    <div style={{ textAlign: 'center', padding: '50px', color: '#94a3b8' }}><div className="loader" style={{ margin: '0 auto 20px', border: '3px solid rgba(255,255,255,0.1)', borderTop: '3px solid #10b981', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }}></div>Loading Timeline Data...</div>
-                ) : historyData.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '50px', color: '#94a3b8' }}><div className="loader" style={{ margin: '0 auto 20px', border: '3px solid rgba(255,255,255,0.1)', borderTop: '3px solid #10b981', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }}></div>Loading Shift History...</div>
+                ) : historyData.length === 0 && historyHourlySummary.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '50px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.05)' }}><div style={{ fontSize: '40px', marginBottom: '10px' }}>📭</div><h3 style={{ color: '#94a3b8', margin: 0 }}>No Events Found</h3><p style={{ color: '#64748b', fontSize: '14px' }}>There are no recorded events for this machine on {historyDate}</p></div>
                 ) : (
+                  <>
+                    {historySummary && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+                        <div style={{ padding: '14px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '12px', textAlign: 'center' }}><div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Production</div><div style={{ fontSize: '24px', color: '#10b981', fontWeight: '900' }}>{historySummary.production?.total_count || 0}</div></div>
+                        <div style={{ padding: '14px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '12px', textAlign: 'center' }}><div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Online Ideal</div><div style={{ fontSize: '16px', color: '#f59e0b', fontWeight: '900' }}>{historySummary.ideal?.online_ideal_display || '0 sec'}</div></div>
+                        <div style={{ padding: '14px', background: 'rgba(100,116,139,0.12)', border: '1px solid rgba(100,116,139,0.25)', borderRadius: '12px', textAlign: 'center' }}><div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Offline Ideal</div><div style={{ fontSize: '16px', color: '#cbd5e1', fontWeight: '900' }}>{historySummary.ideal?.offline_ideal_display || '0 sec'}</div></div>
+                        <div style={{ padding: '14px', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '12px', textAlign: 'center' }}><div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Total Ideal</div><div style={{ fontSize: '16px', color: '#60a5fa', fontWeight: '900' }}>{historySummary.ideal?.total_ideal_display || '0 sec'}</div></div>
+                      </div>
+                    )}
+
+                    {historyMachineMeta && (
+                      <div style={{ padding: '14px 16px', background: 'rgba(2,6,23,0.35)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', marginBottom: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
+                        <div><span style={{ color: '#64748b', fontSize: '11px' }}>Customer</span><div style={{ fontWeight: '800', color: '#fff' }}>{historyMachineMeta.customer_name || historyMachineMeta.customer || 'N/A'}</div></div>
+                        <div><span style={{ color: '#64748b', fontSize: '11px' }}>Model</span><div style={{ fontWeight: '800', color: '#fff' }}>{historyMachineMeta.model_name || historyMachineMeta.model || 'N/A'}</div></div>
+                        <div><span style={{ color: '#64748b', fontSize: '11px' }}>Part Name</span><div style={{ fontWeight: '800', color: '#fff' }}>{historyMachineMeta.part_name || 'N/A'}</div></div>
+                        <div><span style={{ color: '#64748b', fontSize: '11px' }}>Part Number</span><div style={{ fontWeight: '800', color: '#fff' }}>{historyMachineMeta.part_number || 'N/A'}</div></div>
+                        <div><span style={{ color: '#64748b', fontSize: '11px' }}>Tool Name</span><div style={{ fontWeight: '800', color: '#fff' }}>{historyMachineMeta.tool_name || 'N/A'}</div></div>
+                        <div><span style={{ color: '#64748b', fontSize: '11px' }}>Tool ID</span><div style={{ fontWeight: '800', color: '#10b981', wordBreak: 'break-all' }}>{historyMachineMeta.tool_id || historyMachineMeta.epc || 'N/A'}</div></div>
+                        <div><span style={{ color: '#64748b', fontSize: '11px' }}>Latest Shut Height</span><div style={{ fontWeight: '800', color: '#fbbf24' }}>{historyMachineMeta.shut_height || 'N/A'}</div></div>
+                      </div>
+                    )}
+
+                    <h3 style={{ margin: '0 0 14px 0', color: '#f8fafc' }}>Hourly Shift Story</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '30px' }}>
+                      {historyHourlySummary.map((hour, index) => (
+                        <div key={index} style={{ background: 'rgba(15,23,42,0.72)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                            <div style={{ fontWeight: '900', color: '#f8fafc' }}>🕒 {hour.bucket_start_display} - {hour.bucket_end_display}</div>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '12px', fontWeight: '800' }}>
+                              <span style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '5px 9px', borderRadius: '999px' }}>Count: {hour.count || 0}</span>
+                              <span style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '5px 9px', borderRadius: '999px' }}>Online: {hour.online_ideal_display || '0 sec'}</span>
+                              <span style={{ color: '#cbd5e1', background: 'rgba(100,116,139,0.18)', padding: '5px 9px', borderRadius: '999px' }}>Offline: {hour.offline_ideal_display || '0 sec'}</span>
+                            </div>
+                          </div>
+
+                          {(hour.ideal_segments || []).length > 0 && (
+                            <div style={{ marginTop: '10px' }}>
+                              <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '800', marginBottom: '6px', textTransform: 'uppercase' }}>Ideal Segments</div>
+                              {(hour.ideal_segments || []).map((seg, i) => (
+                                <div key={i} style={{ padding: '9px 10px', background: seg.mode === 'OFFLINE' ? 'rgba(100,116,139,0.12)' : 'rgba(245,158,11,0.08)', borderLeft: `3px solid ${seg.mode === 'OFFLINE' ? '#64748b' : '#f59e0b'}`, borderRadius: '8px', marginBottom: '6px' }}>
+                                  <div style={{ color: '#e2e8f0', fontWeight: '800', fontSize: '13px' }}>{seg.mode} Ideal: {seg.start_time} → {seg.end_time} ({seg.bucket_overlap_display || seg.duration_display})</div>
+                                  <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '3px' }}>Reason: {seg.reason || 'Uncategorized'} / {seg.specific_reason || 'Reason Not Provided'} {seg.remark ? ` | ${seg.remark}` : ''}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {(hour.on_off_events || []).length > 0 && (
+                            <div style={{ marginTop: '10px' }}>
+                              <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '800', marginBottom: '6px', textTransform: 'uppercase' }}>Machine ON/OFF</div>
+                              {(hour.on_off_events || []).map((ev, i) => <div key={i} style={{ color: '#cbd5e1', fontSize: '13px', marginBottom: '4px' }}>{eventIcons[ev.type] || '📌'} {ev.time} - {ev.title}: {ev.details}</div>)}
+                            </div>
+                          )}
+
+                          {((hour.tool_changes || []).length > 0 || (hour.shut_height_changes || []).length > 0) && (
+                            <div style={{ marginTop: '10px' }}>
+                              <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '800', marginBottom: '6px', textTransform: 'uppercase' }}>Tool / Shut Height Changes</div>
+                              {(hour.tool_changes || []).map((ev, i) => (
+                                <div key={`tool-${i}`} style={{ color: '#93c5fd', fontSize: '13px', marginBottom: '6px' }}>
+                                  ⚙️ {ev.time} - {ev.details}
+                                  {(ev.part_name || ev.part_number || ev.model_name || ev.tool_name) && (
+                                    <div style={{ marginTop: '3px', color: '#cbd5e1', fontSize: '12px' }}>
+                                      {ev.customer_name || ev.customer || 'N/A'} | {ev.model_name || ev.model || 'N/A'} | {ev.part_name || 'N/A'} | Part No: {ev.part_number || 'N/A'} | Tool: {ev.tool_name || 'N/A'}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                              {(hour.shut_height_changes || []).map((ev, i) => (
+                                <div key={`sh-${i}`} style={{ color: '#93c5fd', fontSize: '13px', marginBottom: '6px' }}>
+                                  🔧 {ev.time} - {ev.details}
+                                  {(ev.part_name || ev.part_number || ev.model_name || ev.tool_name) && (
+                                    <div style={{ marginTop: '3px', color: '#cbd5e1', fontSize: '12px' }}>
+                                      {ev.customer_name || ev.customer || 'N/A'} | {ev.model_name || ev.model || 'N/A'} | {ev.part_name || 'N/A'} | Part No: {ev.part_number || 'N/A'} | Tool: {ev.tool_name || 'N/A'}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <h3 style={{ margin: '0 0 14px 0', color: '#f8fafc' }}>Full Timeline</h3>
                     <div className="timeline-container">
                         <div className="timeline-line"></div>
                         {historyData.map((event, index) => {
-                            const isOff = event.type === 'OFF';
-                            const isChange = event.type.includes('CHANGE');
-                            const color = isOff ? '#ef4444' : isChange ? '#3b82f6' : '#10b981';
+                            const isOff = event.type === 'OFF' || event.type === 'IDEAL_OFFLINE';
+                            const isChange = String(event.type).includes('CHANGE') || event.type === 'TOOL_CHANGE' || event.type === 'SHUT_HEIGHT_CHANGE';
+                            const isIdeal = String(event.type).startsWith('IDEAL');
+                            const color = isOff ? '#64748b' : isChange ? '#3b82f6' : isIdeal ? '#f59e0b' : '#10b981';
                             return (
                                 <div key={index} className="timeline-item">
                                     <div className="timeline-icon" style={{ borderColor: color }}>{eventIcons[event.type] || '📌'}</div>
                                     <div className="timeline-content" style={{ borderLeft: `3px solid ${color}` }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span style={{ fontWeight: 'bold', color: color, fontSize: '16px' }}>{event.type.replace(/_/g, ' ')}</span><span style={{ color: '#94a3b8', fontSize: '14px', background: 'rgba(0,0,0,0.3)', padding: '4px 10px', borderRadius: '20px' }}>{event.time}</span></div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span style={{ fontWeight: 'bold', color: color, fontSize: '16px' }}>{event.title || event.type.replace(/_/g, ' ')}</span><span style={{ color: '#94a3b8', fontSize: '14px', background: 'rgba(0,0,0,0.3)', padding: '4px 10px', borderRadius: '20px' }}>{event.time}</span></div>
                                         <div style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: '1.5' }}>{event.details || (isOff ? 'Machine detected as Offline/No Signal' : 'Machine Power/Signal Restored')}</div>
-                                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '10px', display: 'flex', gap: '15px' }}><span>Shift: {event.shift}</span><span>System Time: {event.raw_time}</span></div>
+                                        {(event.part_name || event.part_number || event.model_name || event.tool_name) && (
+                                          <div style={{ marginTop: '8px', padding: '8px 10px', borderRadius: '8px', background: 'rgba(59,130,246,0.08)', color: '#cbd5e1', fontSize: '12px' }}>
+                                            <b style={{ color: '#93c5fd' }}>TID Map:</b> {event.customer_name || event.customer || 'N/A'} | {event.model_name || event.model || 'N/A'} | {event.part_name || 'N/A'} | Part No: {event.part_number || 'N/A'} | Tool: {event.tool_name || 'N/A'}
+                                          </div>
+                                        )}
+                                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '10px', display: 'flex', gap: '15px', flexWrap: 'wrap' }}><span>Shift: {event.shift}</span><span>System Time: {event.system_time || event.raw_time}</span></div>
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
+                  </>
                 )}
               </div>
             ) : (
@@ -833,14 +1179,14 @@ export default function Plant2Live() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: 'rgba(2, 6, 23, 0.4)', borderRadius: '8px' }}><span style={{ color: '#94a3b8' }}>Part Name</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{selectedMachine.tool_part_name || 'N/A'}</span></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: 'rgba(2, 6, 23, 0.4)', borderRadius: '8px' }}><span style={{ color: '#94a3b8' }}>Tool Name</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{selectedMachine.tool_name || 'N/A'}</span></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: 'rgba(2, 6, 23, 0.4)', borderRadius: '8px' }}><span style={{ color: '#94a3b8' }}>Part Number</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{selectedMachine.tool_part_number || 'N/A'}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: 'rgba(2, 6, 23, 0.4)', borderRadius: '8px' }}><span style={{ color: '#94a3b8' }}>Shut Height</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{typeof selectedMachine.shut_height === 'number' ? selectedMachine.shut_height.toFixed(2) : selectedMachine.shut_height || 'N/A'}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: 'rgba(2, 6, 23, 0.4)', borderRadius: '8px' }}><span style={{ color: '#94a3b8' }}>Tool ID</span><span style={{ fontWeight: 'bold', color: '#10b981', wordBreak: 'break-all' }}>{selectedMachine.tool_id || 'N/A'}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: 'rgba(2, 6, 23, 0.4)', borderRadius: '8px' }}><span style={{ color: '#94a3b8' }}>Shut Height</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{formatShutHeightDisplay(selectedMachine.shut_height)}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: 'rgba(2, 6, 23, 0.4)', borderRadius: '8px' }}><span style={{ color: '#94a3b8' }}>Tool ID</span><span style={{ fontWeight: 'bold', color: '#10b981', wordBreak: 'break-all' }}>{selectedMachine.tool_id || selectedMachine.current_tool_id || 'N/A'}</span></div>
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px', marginTop: '24px' }}>
                 <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}><div style={{ fontSize: '11px', color: '#64748b', letterSpacing: '1px', marginBottom: '10px' }}>LAST HOUR</div><div style={{ fontSize: '36px', fontWeight: '800', color: '#f8fafc' }}>{selectedMachine.last_hour_count || 0}</div></div>
                 <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}><div style={{ fontSize: '11px', color: '#64748b', letterSpacing: '1px', marginBottom: '10px' }}>CUMULATIVE</div><div style={{ fontSize: '36px', fontWeight: '800', color: '#10b981' }}>{selectedMachine.cumulative_count || 0}</div></div>
-                <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}><div style={{ fontSize: '11px', color: '#64748b', letterSpacing: '1px', marginBottom: '10px' }}>TOTAL IDLE</div><div style={{ fontSize: '36px', fontWeight: '800', color: '#f59e0b' }}>{selectedMachine.total_shift_idle_time || 0} <span style={{fontSize: '14px'}}>min</span></div></div>
+                <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}><div style={{ fontSize: '11px', color: '#64748b', letterSpacing: '1px', marginBottom: '10px' }}>{getVisibleIdealMode(selectedMachine)} IDEAL</div><div style={{ fontSize: '30px', fontWeight: '800', color: '#f59e0b' }}>{getVisibleIdealDisplay(selectedMachine, liveIdleSeconds[selectedMachine.machine_no] || 0)}</div></div>
               </div>
             </div>
             )}
