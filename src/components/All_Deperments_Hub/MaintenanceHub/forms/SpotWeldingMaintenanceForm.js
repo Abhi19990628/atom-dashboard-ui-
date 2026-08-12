@@ -1,182 +1,164 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
-import { getApiUrl } from "../../../../config/api";
+import React, { useState,useEffect } from 'react';
+import { useNavigate,useParams } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { getApiUrl } from '../../../../config/api'; 
+import {
+  successAlert,
+  errorAlert,
+  warningAlert,
+  infoAlert,
+  confirmAlert,
+} from "../../../../utils/alertUtils";
 import axios from "axios";
-
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 const SpotWeldingMaintenanceForm = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // Get the ID from the URL
+  const isViewMode = Boolean(id); // Determine if it's view mode based on the presence of an ID
   const [isChecklistOpen, setIsChecklistOpen] = useState(true);
-  const statusOptions = ["", "Ok", "Not Ok", "N/A"];
+  const statusOptions = ['', 'Ok', 'Not Ok', 'N/A'];
 
   // --- FULL CHECKLIST DATA ---
   const initialChecklist = [
-    {
-      id: 1,
-      point: "Air Filter",
-      parameter: "Clean air filter",
-      method: "Visual",
-      before: "",
-      after: "",
-      remarks: "",
-    },
-    {
-      id: 2,
-      point: "Coolant Pump",
-      parameter: "Coolant pump is working",
-      method: "Visual",
-      before: "",
-      after: "",
-      remarks: "",
-    },
-    {
-      id: 3,
-      point: "Digital Panel",
-      parameter: "Digital panel is working",
-      method: "Visual",
-      before: "",
-      after: "",
-      remarks: "",
-    },
-    {
-      id: 4,
-      point: "Air Pressure",
-      parameter: "Check air pressure",
-      method: "Visual",
-      before: "",
-      after: "",
-      remarks: "",
-    },
-    {
-      id: 5,
-      point: "Electrode Alignment",
-      parameter: "Check alignment of electrodes",
-      method: "Visual",
-      before: "",
-      after: "",
-      remarks: "",
-    },
-    {
-      id: 6,
-      point: "Abnormal sound",
-      parameter: "Any abnormal sound heard?",
-      method: "Hearing",
-      before: "",
-      after: "",
-      remarks: "",
-    },
-    {
-      id: 7,
-      point: "Starter & Wiring",
-      parameter: "Starter & Wiring is in good condition",
-      method: "Visual",
-      before: "",
-      after: "",
-      remarks: "",
-    },
-    {
-      id: 8,
-      point: "PEDAL SPRING",
-      parameter: "Should be proper working",
-      method: "Manual",
-      before: "",
-      after: "",
-      remarks: "",
-    },
+    { id: 1, point: "Air Filter", parameter: "Clean air filter", method: "Visual", before: '', after: '', remarks: '' },
+    { id: 2, point: "Coolant Pump", parameter: "Coolant pump is working", method: "Visual", before: '', after: '', remarks: '' },
+    { id: 3, point: "Digital Panel", parameter: "Digital panel is working", method: "Visual", before: '', after: '', remarks: '' },
+    { id: 4, point: "Air Pressure", parameter: "Check air pressure", method: "Visual", before: '', after: '', remarks: '' },
+    { id: 5, point: "Electrode Alignment", parameter: "Check alignment of electrodes", method: "Visual", before: '', after: '', remarks: '' },
+    { id: 6, point: "Abnormal sound", parameter: "Any abnormal sound heard?", method: "Hearing", before: '', after: '', remarks: '' },
+    { id: 7, point: "Starter & Wiring", parameter: "Starter & Wiring is in good condition", method: "Visual", before: '', after: '', remarks: '' },
+    { id: 8, point: "PEDAL SPRING", parameter: "Should be proper working", method: "Manual", before: '', after: '', remarks: '' }
   ];
 
   const initialMetaData = {
-    machineName: "", // Editable Machine Name
-    date: new Date().toISOString().split("T")[0],
-    machineNo: "",
-    location: "",
-    specification: "",
-    maintenancePersonnel: "",
-    preparedBy: "",
-    checkedBy: "",
+    machineName: '', // Editable Machine Name
+    date: new Date().toISOString().split('T')[0],
+    machineNo: '',
+    location: '',
+    specification: '',
+    maintenancePersonnel: '',
+    preparedBy: '',
+    checkedBy: ''
   };
 
   const [metaData, setMetaData] = useState(initialMetaData);
   const [tableData, setTableData] = useState(initialChecklist);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleMetaChange = (e) =>
-    setMetaData({ ...metaData, [e.target.name]: e.target.value });
 
+  
+      // --- APPROVAL / VIEW MODE STATE ---
+      const [approvalRemark, setApprovalRemark] = useState("");
+      const [approvalLoading, setApprovalLoading] = useState(false);
+      const [approvalStatus, setApprovalStatus] = useState("");
+      const [reviewedAt, setReviewedAt] = useState("");
+    
+      // --- FETCH REPORT WHEN OPENED IN VIEW MODE (from notification) ---
+      useEffect(() => {
+        if (!id) return;
+    
+        const fetchReport = async () => {
+          try {
+            const res = await axios.get(
+              `${API_BASE_URL}/api/get-single-maintenance-report/spot-welding/${id}/`
+            );
+            
+            if (res.data.success) {
+              const data = res.data.data || {};
+              const meta = data.metaData || {};
+    
+              setMetaData({
+                machineName: meta.machineName || 'Spot Welding Machine', // Default value if not provided
+                date: meta.date || '',
+                machineNo: meta.machineNo || '',
+                location: meta.location || '',
+                specification: meta.specification || '',
+                maintenancePersonnel: meta.maintenancePersonnel || '',
+                preparedBy: meta.preparedBy || '',
+                checkedBy: meta.checkedBy || '',
+              });
+    
+              const rows = Array.isArray(data.tableData) ? data.tableData : [];
+              setTableData(
+                rows.length
+                  ? rows.map((row, index) => ({
+                      id: row.sr_no || index + 1,
+                      point: row.point || '',
+                      parameter: row.parameter || '',
+                      method: row.method || '',
+                      before: row.before || '',
+                      after: row.after || '',
+                      remarks: row.remarks || '',
+                    }))
+                  : initialChecklist
+              );
+    
+              setApprovalRemark(data.approval_remarks || "");
+              setApprovalStatus(data.approval_status || "");
+              setReviewedAt(data.approved_or_rejected_at || "");
+            } else {
+              errorAlert(res.data.error || "Failed to load Spot Welding Check Sheet.");
+            }
+          } catch (err) {
+            console.error("Error loading Check Sheet:", err);
+            errorAlert(err.response?.data?.error || "Failed to load Spot Welding Check Sheet.");
+          }
+        };
+    
+        fetchReport();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [id]);
+
+
+  const handleMetaChange = (e) => setMetaData({ ...metaData, [e.target.name]: e.target.value });
+  
   const handleBeforeChange = (id, value) => {
-    setTableData(
-      tableData.map((row) => (row.id === id ? { ...row, before: value } : row)),
-    );
+    setTableData(tableData.map(row => row.id === id ? { ...row, before: value } : row));
   };
-
+  
   const handleAfterChange = (id, value) => {
-    setTableData(
-      tableData.map((row) => (row.id === id ? { ...row, after: value } : row)),
-    );
+    setTableData(tableData.map(row => row.id === id ? { ...row, after: value } : row));
   };
-
+  
   const handleRemarksChange = (id, value) => {
-    setTableData(
-      tableData.map((row) =>
-        row.id === id ? { ...row, remarks: value } : row,
-      ),
-    );
+    setTableData(tableData.map(row => row.id === id ? { ...row, remarks: value } : row));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     const currentUser = localStorage.getItem("username") || "Unknown User";
+
     const payload = {
-      machine_name: metaData.machineName,
+      machineName: metaData.machineName,
       date: metaData.date,
-      machine_no: metaData.machineNo,
+      machineNo: metaData.machineNo,
       location: metaData.location,
       specification: metaData.specification,
-      maintenance_personnel: metaData.maintenancePersonnel,
-      prepared_by: metaData.preparedBy,
-      checked_by: metaData.checkedBy,
+      maintenancePersonnel: metaData.maintenancePersonnel,
+      preparedBy: metaData.preparedBy,
+      checkedBy: metaData.checkedBy,
+      tableData: tableData,
       username: currentUser,
-      department_name: `${metaData.location} (Maintenance)`,
-      checkpoints: tableData.map((row, index) => ({
-        sr_no: index + 1,
-        check_point: row.point,
-        checking_parameter: row.parameter,
-        checking_method: row.method,
-        before_maintenance: row.before,
-        after_maintenance: row.after,
-        remarks: row.remarks || "",
-        spare_used_remarks: row.remarks || "",
-      })),
     };
 
     try {
-      const response = await fetch(
-        getApiUrl("/api/spot-welding-maintenance/save/"),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
+      const response = await fetch(getApiUrl('/api/spot-welding-maintenance/save/'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify(payload)
+      });
 
       if (response.ok) {
-        const currentUser = localStorage.getItem("username") || "Unknown User";
-
-        alert("Success! Spot Welding Maintenance record has been saved.");
+        successAlert("Success! Spot Welding Maintenance record has been saved.");
         setMetaData(initialMetaData);
         setTableData(initialChecklist);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         const errorData = await response.json();
-        alert(
-          "Failed to save data. Error: " +
-            (errorData.error
-              ? JSON.stringify(errorData.error)
-              : "Unknown Error"),
-        );
+        errorAlert("Failed to save data. Error: " + (errorData.error ? JSON.stringify(errorData.error) : 'Unknown Error'));
       }
     } catch (error) {
       console.error("Error saving data:", error);
@@ -186,11 +168,67 @@ const SpotWeldingMaintenanceForm = () => {
     }
   };
 
+     // --- APPROVE / REJECT HANDLERS (VIEW MODE) ---
+    const handleApprove = async () => {
+      try {
+        setApprovalLoading(true);
+        const currentUser = localStorage.getItem("username") || "Approver";
+        const res = await axios.post(`${API_BASE_URL}/api/approve-report/`, {
+          log_id: id,
+          approver_username: currentUser,
+          remarks: approvalRemark,
+        });
+  
+        successAlert(res.data?.message || "Report approved successfully.");
+        navigate("/notifications");
+      } catch (err) {
+        console.error("Approve error:", err);
+        errorAlert(err.response?.data?.error || "Approval failed.");
+      } finally {
+        setApprovalLoading(false);
+      }
+    };
+  
+    const handleReject = async () => {
+      if (!approvalRemark.trim()) {
+        warningAlert("Please enter remark before rejecting.");
+        return;
+      }
+  
+      try {
+        setApprovalLoading(true);
+        const currentUser = localStorage.getItem("username") || "Approver";
+        const res = await axios.post(`${API_BASE_URL}/api/reject-report/`, {
+          log_id: id,
+          approver_username: currentUser,
+          remarks: approvalRemark,
+        });
+  
+        errorAlert(res.data?.message || "Report rejected successfully.");
+        navigate("/notifications");
+      } catch (err) {
+        console.error("Reject error:", err);
+        errorAlert(err.response?.data?.error || "Reject failed.");
+      } finally {
+        setApprovalLoading(false);
+      }
+    };
+  
+    const isAlreadyReviewed =
+      approvalStatus &&
+      (approvalStatus.toLowerCase().includes("approved") ||
+        approvalStatus.toLowerCase().includes("rejected"));
+  
+    const goBack = () => {
+      if (isViewMode) {
+        navigate('/notifications');
+        return;
+      }
+      navigate('/Maintenance/Machine/weekly');
+    };
+
   return (
-    <div
-      className="container-fluid py-4"
-      style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}
-    >
+    <div className="container-fluid py-4" style={{ backgroundColor: '#f8fafc', minHeight: '100vh' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         * { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -309,117 +347,95 @@ const SpotWeldingMaintenanceForm = () => {
       `}</style>
 
       {/* --- TOP BACK BUTTON --- */}
-      <div
-        className="mx-auto mb-3 no-print animate-fade-in px-2"
-        style={{ maxWidth: "1200px" }}
-      >
-        <button
+      <div className="mx-auto mb-3 no-print animate-fade-in px-2" style={{ maxWidth: '1200px' }}>
+        <button 
           className="btn btn-outline-custom rounded-pill"
-          onClick={() => navigate("/Maintenance/Machine/weekly")}
-          style={{ fontSize: "0.85rem" }}
+          onClick={() => navigate('/Maintenance/Machine/weekly')}
+          style={{ fontSize: '0.85rem' }}
         >
           ← Back to Weekly Hub
         </button>
       </div>
 
       {/* Header Panel */}
-      <div
-        className="theme-card mx-auto mb-4 p-3 p-md-4 d-flex justify-content-between align-items-center"
-        style={{ maxWidth: "1200px", borderTop: "6px solid #6366f1" }}
-      >
+      <div className="theme-card mx-auto mb-4 p-3 p-md-4 d-flex justify-content-between align-items-center" style={{ maxWidth: '1200px', borderTop: '6px solid #6366f1' }}>
         <div>
-          <h3
-            className="fw-bold mb-1 fs-5 fs-md-3"
-            style={{ color: "#1e293b" }}
-          >
-            SPOT WELDING MAINTENANCE
-          </h3>
-          <span
-            className="badge rounded-pill"
-            style={{
-              backgroundColor: "#e0e7ff",
-              color: "#4f46e5",
-              padding: "8px 15px",
-            }}
-          >
-            Form: AOT-F-PM-01 | Weekly
-          </span>
+          <h3 className="fw-bold mb-1 fs-5 fs-md-3" style={{ color: '#1e293b' }}>SPOT WELDING MAINTENANCE</h3>
+          <span className="badge rounded-pill" style={{ backgroundColor: '#e0e7ff', color: '#4f46e5', padding: '8px 15px' }}>Form: AOT-F-PM-01 | Weekly</span>
         </div>
       </div>
 
-      <div
-        className="theme-card mx-auto p-3 p-md-4"
-        style={{ maxWidth: "1200px" }}
-      >
+      
+          {isViewMode && (
+          <div className="px-3 mx-auto px-md-4 pt-3"  style={{ maxWidth: '1200px',  }} >
+            <span className="badge px-3 py-2 d-inline-block text-primary" style={{ backgroundColor: '#eff6ff', border: '1px solid #93c5fd', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Review Mode
+            </span>
+          </div>
+        )}
+
+        {isViewMode && approvalStatus && (
+          <div className="px-3 mx-auto  px-md-4 pt-3"  style={{ maxWidth: '1200px',  }} >
+            <div className="d-flex flex-column flex-sm-row justify-content-between gap-2 p-3" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+              <div>
+                <div className="form-label mb-0">Current Status</div>
+                <div className="fw-bold" style={{
+                  color: approvalStatus.toLowerCase().includes('approved') ? '#16a34a'
+                    : approvalStatus.toLowerCase().includes('rejected') ? '#dc2626'
+                    : '#d97706'
+                }}>
+                  {approvalStatus}
+                </div>
+              </div>
+              {reviewedAt && (
+                <div>
+                  <div className="form-label mb-0">Reviewed At</div>
+                  <div className="fw-bold text-dark">{reviewedAt}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+
+      <div className="theme-card mx-auto p-3 p-md-4" style={{ maxWidth: '1200px' }}>
         <form onSubmit={handleSubmit}>
           {/* General Information */}
           <div className="row g-3 mb-4">
             <div className="col-12 col-md-4">
               <label className="form-label">Machine Name</label>
-              <input
-                type="text"
-                className="form-control"
+              <input 
+                type="text" 
+                className="form-control" 
                 name="machineName"
-                value={metaData.machineName}
-                onChange={handleMetaChange}
+                value={metaData.machineName} 
+                onChange={handleMetaChange} 
                 placeholder="Enter Machine Name"
-                required
+                required 
               />
             </div>
             <div className="col-12 col-md-4">
               <label className="form-label">Date</label>
-              <input
-                type="date"
-                className="form-control"
-                name="date"
-                value={metaData.date}
-                onChange={handleMetaChange}
-                required
-              />
+              <input type="date" className="form-control" name="date" value={metaData.date} onChange={handleMetaChange} required />
             </div>
             <div className="col-12 col-md-4">
               <label className="form-label">Machine No.</label>
-              <input
-                type="text"
-                className="form-control"
-                name="machineNo"
-                value={metaData.machineNo}
-                onChange={handleMetaChange}
-                required
-              />
+              <input type="text" className="form-control" name="machineNo" value={metaData.machineNo} onChange={handleMetaChange} required />
             </div>
             <div className="col-12 col-md-4">
               <label className="form-label">Location</label>
-              <input
-                type="text"
-                className="form-control"
-                name="location"
-                value={metaData.location}
-                onChange={handleMetaChange}
-                required
-              />
+              <input type="text" className="form-control" name="location" value={metaData.location} onChange={handleMetaChange} required />
             </div>
             <div className="col-12 col-md-8">
               <label className="form-label">Maintenance Personnel</label>
-              <input
-                type="text"
-                className="form-control"
-                name="maintenancePersonnel"
-                value={metaData.maintenancePersonnel}
-                onChange={handleMetaChange}
-                required
-              />
+              <input type="text" className="form-control" name="maintenancePersonnel" value={metaData.maintenancePersonnel} onChange={handleMetaChange} required />
             </div>
           </div>
 
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="fw-bold mb-0">Check Points</h5>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary"
-              onClick={() => setIsChecklistOpen(!isChecklistOpen)}
-            >
-              {isChecklistOpen ? "Hide" : "Show"}
+            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setIsChecklistOpen(!isChecklistOpen)}>
+              {isChecklistOpen ? 'Hide' : 'Show'}
             </button>
           </div>
 
@@ -428,17 +444,13 @@ const SpotWeldingMaintenanceForm = () => {
               <table className="table mb-0 ss-table">
                 <thead>
                   <tr className="text-center">
-                    <th style={{ width: "5%" }}>Sr.</th>
-                    <th className="text-start" style={{ width: "25%" }}>
-                      Check Points
-                    </th>
-                    <th className="text-start" style={{ width: "25%" }}>
-                      Parameter
-                    </th>
-                    <th style={{ width: "10%" }}>Method</th>
-                    <th style={{ width: "10%" }}>Before</th>
-                    <th style={{ width: "10%" }}>After</th>
-                    <th style={{ width: "15%" }}>Remarks</th>
+                    <th style={{ width: '5%' }}>Sr.</th>
+                    <th className="text-start" style={{ width: '25%' }}>Check Points</th>
+                    <th className="text-start" style={{ width: '25%' }}>Parameter</th>
+                    <th style={{ width: '10%' }}>Method</th>
+                    <th style={{ width: '10%' }}>Before</th>
+                    <th style={{ width: '10%' }}>After</th>
+                    <th style={{ width: '15%' }}>Remarks</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -462,49 +474,19 @@ const SpotWeldingMaintenanceForm = () => {
                       </td>
                       <td>
                         <span className="mobile-label">Before Maint.</span>
-                        <select
-                          className="form-select form-select-sm w-100"
-                          value={row.before}
-                          onChange={(e) =>
-                            handleBeforeChange(row.id, e.target.value)
-                          }
-                          required
-                        >
-                          {statusOptions.map((opt) => (
-                            <option key={opt} value={opt}>
-                              {opt || "Select"}
-                            </option>
-                          ))}
+                        <select className="form-select form-select-sm w-100" value={row.before} onChange={(e) => handleBeforeChange(row.id, e.target.value)} required>
+                          {statusOptions.map(opt => <option key={opt} value={opt}>{opt || 'Select'}</option>)}
                         </select>
                       </td>
                       <td>
                         <span className="mobile-label">After Maint.</span>
-                        <select
-                          className="form-select form-select-sm w-100"
-                          value={row.after}
-                          onChange={(e) =>
-                            handleAfterChange(row.id, e.target.value)
-                          }
-                          required
-                        >
-                          {statusOptions.map((opt) => (
-                            <option key={opt} value={opt}>
-                              {opt || "Select"}
-                            </option>
-                          ))}
+                        <select className="form-select form-select-sm w-100" value={row.after} onChange={(e) => handleAfterChange(row.id, e.target.value)} required>
+                          {statusOptions.map(opt => <option key={opt} value={opt}>{opt || 'Select'}</option>)}
                         </select>
                       </td>
                       <td>
                         <span className="mobile-label">Remarks</span>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm w-100"
-                          placeholder="Remarks..."
-                          value={row.remarks}
-                          onChange={(e) =>
-                            handleRemarksChange(row.id, e.target.value)
-                          }
-                        />
+                        <input type="text" className="form-control form-control-sm w-100" placeholder="Remarks..." value={row.remarks} onChange={(e) => handleRemarksChange(row.id, e.target.value)} />
                       </td>
                     </tr>
                   ))}
@@ -518,40 +500,69 @@ const SpotWeldingMaintenanceForm = () => {
             <div className="col-12 col-md-6">
               <div className="p-3 rounded-3 border">
                 <label className="form-label">Prepared By</label>
-                <input
-                  type="text"
-                  className="form-control border-0"
-                  name="preparedBy"
-                  value={metaData.preparedBy}
-                  onChange={handleMetaChange}
-                  required
-                />
+                <input type="text" className="form-control border-0" name="preparedBy" value={metaData.preparedBy} onChange={handleMetaChange} required />
               </div>
             </div>
             <div className="col-12 col-md-6">
               <div className="p-3 rounded-3 border">
                 <label className="form-label">Checked By</label>
-                <input
-                  type="text"
-                  className="form-control border-0"
-                  name="checkedBy"
-                  value={metaData.checkedBy}
-                  onChange={handleMetaChange}
-                />
+                <input type="text" className="form-control border-0" name="checkedBy" value={metaData.checkedBy} onChange={handleMetaChange} />
               </div>
             </div>
           </div>
-
+          {!isViewMode && (
           <div className="d-flex flex-column flex-sm-row justify-content-end mt-4">
-            <button
-              type="submit"
+            <button 
+              type="submit" 
               disabled={isSubmitting}
               className="btn btn-theme rounded-pill px-5 w-100 w-sm-auto"
             >
-              {isSubmitting ? "Submitting..." : "Save Record"}
+              {isSubmitting ? 'Submitting...' : 'Save Record'}
             </button>
           </div>
+          )}
         </form>
+
+          {isViewMode && (
+            <div className="mt-4 pt-4 no-print" style={{ borderTop: '2px solid #1e293b' }}>
+              <label className="form-label">APPROVAL / REJECTION REMARK:</label>
+              <textarea
+                rows="3"
+                className="form-control"
+                value={approvalRemark}
+                onChange={(e) => setApprovalRemark(e.target.value)}
+                disabled={isAlreadyReviewed}
+                placeholder="Enter approval or rejection remark..."
+              />
+
+              {isAlreadyReviewed ? (
+                <div className="mt-3 p-3" style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>
+                  This report is already reviewed. No further action is required.
+                </div>
+              ) : (
+                <div className="d-flex flex-column-reverse flex-sm-row gap-3 justify-content-end mt-3">
+                  <button
+                    type="button"
+                    onClick={handleReject}
+                    disabled={approvalLoading}
+                    className="btn rounded-pill px-4 shadow-sm w-100 w-sm-auto text-white"
+                    style={{ background: '#ef4444', fontWeight: 600 }}
+                  >
+                    {approvalLoading ? 'Please wait...' : 'Reject'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleApprove}
+                    disabled={approvalLoading}
+                    className="btn rounded-pill px-4 shadow-sm w-100 w-sm-auto text-white"
+                    style={{ background: '#10b981', fontWeight: 600 }}
+                  >
+                    {approvalLoading ? 'Please wait...' : 'Approve'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
       </div>
     </div>
   );

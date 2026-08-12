@@ -1,5 +1,7 @@
 // ProductsSection.jsx
-import { useRef, useEffect } from "react";
+// 
+// ProductsSection.jsx
+// ProductsSection.jsx
 import { motion } from "framer-motion";
 import { Settings2, Layers3 } from "lucide-react";
 
@@ -8,31 +10,31 @@ const row1Products = [
     name: "Muffler Parts",
     desc: "High-temp exhaust system components with precision weld joints and heat-resistant coatings.",
     tag: "Exhaust Systems",
-    color: "amber",
+    variant: "a",
   },
   {
     name: "Chassis Parts",
     desc: "Structural frame components engineered for maximum load-bearing strength and rigidity.",
     tag: "Structural",
-    color: "cyan",
+    variant: "b",
   },
   {
     name: "Tubular Parts",
     desc: "Seamless and welded tubes for fluid transfer, frameworks, and roll-cage structures.",
     tag: "Fluid Systems",
-    color: "amber",
+    variant: "a",
   },
   {
     name: "Flanges",
     desc: "Custom flanges for pipe connections, pressure containment, and leak-free assemblies.",
     tag: "Connectors",
-    color: "cyan",
+    variant: "b",
   },
   {
     name: "Busbars",
     desc: "Copper and aluminium busbars for high-current power distribution in EVs and industry.",
     tag: "Electrical",
-    color: "amber",
+    variant: "a",
   },
 ];
 
@@ -41,78 +43,67 @@ const row2Products = [
     name: "Machined Parts",
     desc: "CNC-machined components with micron-level tolerances for critical assemblies.",
     tag: "Precision CNC",
-    color: "cyan",
+    variant: "b",
   },
   {
     name: "Draw Parts",
     desc: "Deep drawn metal parts for complex hollow geometries and seamless enclosures.",
     tag: "Metal Forming",
-    color: "amber",
+    variant: "a",
   },
   {
     name: "Custom Components",
     desc: "Bespoke OEM solutions engineered precisely to your design and specification.",
     tag: "OEM Solutions",
-    color: "cyan",
+    variant: "b",
   },
   {
     name: "Brake Components",
     desc: "Safety-critical brake system parts validated for performance and durability.",
     tag: "Safety Systems",
-    color: "amber",
+    variant: "a",
   },
   {
     name: "Suspension Parts",
     desc: "Damper housings and linkage components machined for ride precision.",
     tag: "Chassis",
-    color: "cyan",
+    variant: "b",
   },
 ];
 
+// Two shades of the same blue — keeps the "white + blue only" rule
+// while still giving alternating cards a little visual rhythm.
 function ProductCard({ product }) {
-  const isAmber = product.color === "amber";
+  const isA = product.variant === "a";
+  const accentVar = isA ? "var(--accent)" : "var(--accent-strong)";
+
   return (
     <motion.div
-      whileHover={{
-        rotateY: -8,
-        y: -6,
-        scale: 1.04,
-        transition: { duration: 0.25 },
-      }}
-      style={{ transformStyle: "preserve-3d", perspective: 600 }}
-      className={`flex-shrink-0 w-[200px] sm:w-[220px] relative group
-        bg-gradient-to-br from-[#1e293b]/95 to-[#0f172a]/80
-        border rounded-2xl p-[18px] cursor-pointer overflow-hidden
-        transition-[border-color] duration-300
-        ${isAmber
-          ? "border-[#fbbf24]/15 hover:border-[#fbbf24]/60"
-          : "border-[#06b6d4]/15 hover:border-[#06b6d4]/60"
-        }`}
+      whileHover={{ y: -6, scale: 1.03 }}
+      transition={{ duration: 0.2 }}
+      style={{ willChange: "transform", "--card-accent": accentVar }}
+      className="flex-shrink-0 w-[200px] sm:w-[220px] relative group bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--card-accent)] rounded-2xl p-[18px] cursor-pointer overflow-hidden transition-colors duration-300 shadow-[0_6px_20px_var(--shadow-color)]"
     >
-      {/* Glint overlay */}
-      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-br from-white/[0.04] to-transparent" />
-
-      {/* Icon */}
       <div
-        className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 
-          ${isAmber ? "bg-[#fbbf24]/10" : "bg-[#06b6d4]/10"}`}
+        className="w-11 h-11 rounded-xl flex items-center justify-center mb-3 bg-[var(--accent-tint)]"
       >
-        {isAmber ? (
-          <Settings2 className="w-5 h-5 text-[#fbbf24]" />
+        {isA ? (
+          <Settings2 className="w-5 h-5" style={{ color: accentVar }} />
         ) : (
-          <Layers3 className="w-5 h-5 text-[#06b6d4]" />
+          <Layers3 className="w-5 h-5" style={{ color: accentVar }} />
         )}
       </div>
 
-      <p className="text-[13px] font-semibold text-[#f1f5f9] mb-1.5">{product.name}</p>
-      <p className="text-[11px] leading-relaxed text-[#64748b] mb-3">{product.desc}</p>
+      <p className="text-[13px] font-semibold text-[var(--text)] mb-1.5">
+        {product.name}
+      </p>
+      <p className="text-[11px] leading-relaxed text-[var(--text-muted)] mb-3">
+        {product.desc}
+      </p>
 
       <span
-        className={`text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full
-          ${isAmber
-            ? "bg-[#fbbf24]/10 text-[#fbbf24]"
-            : "bg-[#06b6d4]/10 text-[#06b6d4]"
-          }`}
+        className="text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full bg-[var(--accent-tint)]"
+        style={{ color: accentVar }}
       >
         {product.tag}
       </span>
@@ -121,20 +112,24 @@ function ProductCard({ product }) {
 }
 
 function InfiniteTrack({ products, direction = "left", speed = 30 }) {
-  // Duplicate 4× so the loop is seamless at any viewport
+  // Duplicated 4x to match the existing marquee keyframes (which
+  // translate by -25% per loop) — reducing this caused the visible
+  // gap and speed mismatch.
   const doubled = [...products, ...products, ...products, ...products];
-  const animClass = direction === "left" ? "animate-scroll-left" : "animate-scroll-right";
+  const animClass =
+    direction === "left" ? "animate-scroll-left" : "animate-scroll-right";
 
   return (
-    <div className="relative w-full overflow-hidden py-2 
+    <div
+      className="relative w-full overflow-hidden py-2
       before:absolute before:left-0 before:top-0 before:bottom-0 before:w-24 before:z-10
-      before:bg-gradient-to-r before:from-[#0f172a] before:to-transparent
+      before:bg-gradient-to-r before:from-[var(--bg-soft)] before:to-transparent
       after:absolute after:right-0 after:top-0 after:bottom-0 after:w-24 after:z-10
-      after:bg-gradient-to-l after:from-[#0f172a] after:to-transparent"
+      after:bg-gradient-to-l after:from-[var(--bg-soft)] after:to-transparent"
     >
       <div
-        className={`flex gap-4 w-max ${animClass}`}
-        style={{ "--speed": `${speed}s` }}
+        className={`flex gap-4 w-max ${animClass} [animation-play-state:running] hover:[animation-play-state:paused]`}
+        style={{ "--speed": `${speed}s`, willChange: "transform" }}
       >
         {doubled.map((p, i) => (
           <ProductCard key={i} product={p} />
@@ -146,46 +141,42 @@ function InfiniteTrack({ products, direction = "left", speed = 30 }) {
 
 export default function ProductsSection() {
   return (
-      <div className="relative bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] py-16 overflow-hidden">
-        {/* Ambient glow */}
+    <div className="relative bg-gradient-to-b from-[var(--bg)] via-[var(--bg-soft)] to-[var(--bg)] py-16 overflow-hidden">
+      {/* Ambient glow — static, no continuous JS animation loop */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[var(--accent-strong)] rounded-full filter blur-[120px] opacity-[0.05] pointer-events-none" />
+
+      <div className="relative z-10">
+        {/* Heading */}
         <motion.div
-          animate={{ scale: [1, 1.15, 1], x: [0, 30, 0] }}
-          transition={{ duration: 18, repeat: Infinity }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#fbbf24] rounded-full filter blur-[120px] opacity-[0.04] pointer-events-none"
-        />
-
-        <div className="relative z-10">
-          {/* Heading */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: false, amount: 0.3 }}
-            className="text-center mb-10 px-6"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#fbbf24]/10 rounded-full mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#fbbf24]" />
-              <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#fbbf24]">
-                What We Make
-              </span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#f1f5f9] tracking-tight">
-              Our{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#fbbf24] to-[#f59e0b]">
-                Products
-              </span>
-            </h2>
-            <div className="w-10 h-0.5 bg-gradient-to-r from-[#fbbf24] to-transparent rounded-full mx-auto mt-4" />
-          </motion.div>
-
-          {/* Track 1 — scrolls left */}
-          <InfiniteTrack products={row1Products} direction="left" speed={32} />
-
-          {/* Track 2 — scrolls right, slight offset */}
-          <div className="mt-4">
-            <InfiniteTrack products={row2Products} direction="right" speed={26} />
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true, amount: 0.3 }}
+          className="text-center mb-10 px-6"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[var(--accent-strong)]/10 rounded-full mb-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-strong)]" />
+            <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-[var(--accent-strong)]">
+              What We Make
+            </span>
           </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text)] tracking-tight">
+            Our{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent-strong)] to-[var(--accent-strong-alt)]">
+              Products
+            </span>
+          </h2>
+          <div className="w-10 h-0.5 bg-gradient-to-r from-[var(--accent-strong)] to-transparent rounded-full mx-auto mt-4" />
+        </motion.div>
+
+        {/* Track 1 — scrolls left */}
+        <InfiniteTrack products={row1Products} direction="left" speed={32} />
+
+        {/* Track 2 — scrolls right */}
+        <div className="mt-4">
+          <InfiniteTrack products={row2Products} direction="right" speed={26} />
         </div>
       </div>
+    </div>
   );
 }

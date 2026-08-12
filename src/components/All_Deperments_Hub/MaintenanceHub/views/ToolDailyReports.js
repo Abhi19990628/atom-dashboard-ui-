@@ -53,24 +53,54 @@ const ToolDailyReports = () => {
             <style>{`
                 .maintenance-page-wrapper { position: relative; min-height: 100vh; background-color: #f1f4f9; overflow-y: auto; font-family: 'Inter', sans-serif; }
                 
-                /* Navbar Style */
-                .hub-main-navbar { position: fixed; top: 0; width: 100%; height: 75px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; border-bottom: 1px solid #eef2f6; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-                .nav-brand-section { font-weight: 800; color: #4f46e5; font-size: 1.25rem; display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; }
+                /* Sticky Navbar Style */
+                .hub-main-navbar { 
+                    position: sticky; 
+                    top: 0; 
+                    background: #fff; 
+                    min-height: 90px; 
+                    display: flex; 
+                    justify-content: space-between; 
+                    align-items: center; 
+                    padding: 0 2.5rem; 
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.06); 
+                    z-index: 1000; 
+                    gap: 15px; 
+                }
+                .nav-brand-section { font-weight: 800; color: #3b82f6; font-size: 1.25rem; display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; z-index: 2; }
                 
-                .main-content-area { padding: 110px 20px 80px; max-width: 1300px; margin: 0 auto; }
-                .back-link { cursor: pointer; color: #64748b; font-weight: 600; margin-bottom: 1.5rem; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
-                .back-link:hover { color: #4f46e5; }
+                /* Main Content Area */
+                .main-content-area { padding: 40px 24px 80px; max-width: 1536px; margin-left:50px; }
+                
+                /* 🔥 Bulletproof Grid System - Exactly 4 columns on laptops */
+                .reports-grid { 
+                    display: grid; 
+                    grid-template-columns: repeat(4, 1fr); 
+                    gap: 24px;
+                    width: 100%;
+                }
+
+                /* Responsive Breakpoints for Grid */
+                @media (max-width: 1200px) {
+                    .reports-grid { grid-template-columns: repeat(3, 1fr); }
+                }
+                @media (max-width: 900px) {
+                    .reports-grid { grid-template-columns: repeat(2, 1fr); }
+                }
+                @media (max-width: 600px) {
+                    .reports-grid { grid-template-columns: repeat(1, 1fr); }
+                }
 
                 .module-card { background: #ffffff; border: 1px solid #eef2f6; border-radius: 20px; padding: 2.5rem 2rem; cursor: pointer; transition: 0.3s; position: relative; overflow: hidden; height: 100%; text-align: left; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
                 .module-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
                 .card-accent-line { position: absolute; top: 0; left: 0; right: 0; height: 5px; }
                 
                 .icon-wrapper { width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1.5rem; }
-                .card-title-custom { font-weight: 800; font-size: 1.25rem; color: #0f172a; margin-bottom: 1.2rem; padding-right: 140px; }
+                .card-title-custom { font-weight: 800; font-size: 1.25rem; color: #0f172a; margin-bottom: 1.2rem; padding-right: 40px; }
                 .meta-tag { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: #64748b; background: #f8fafc; padding: 6px 12px; border-radius: 8px; margin-bottom: 8px; font-weight: 600; border: 1px solid #f1f5f9; width: fit-content; }
                 .meta-tag b { color: #0f172a; }
 
-                /* ✅ Live / Under Development Badges - matched with QaHub */
+                /* ✅ Live / Under Development Badges */
                 .status-badge {
                     position: absolute; top: 16px; right: 16px;
                     padding: 5px 10px;
@@ -104,55 +134,50 @@ const ToolDailyReports = () => {
                 .modal-btn-icon { width: 42px; height: 42px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
             `}</style>
 
-            {/* Navbar */}
-            <nav className="hub-main-navbar">
+            {/* Navbar with True-Centered Header */}
+            <nav className="hub-main-navbar" style={{ position: 'relative' }}>
                 <div className="nav-brand-section" onClick={() => navigate('/Maintenance/Tool')}>
-                    <i className="bi bi-gear-fill"></i> Tool Daily Reports
+                    <i className="bi bi-arrow-left-circle"></i> Back To Tool
                 </div>
-                <div className="d-flex align-items-center gap-3">
+                
+                {/* Centered Header Title */}
+                <div className="text-center" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', width: 'max-content', pointerEvents: 'none' }}>
+                    <h1 style={{ fontWeight: 900, color: '#3b82f6', fontSize: 'clamp(1.2rem, 3vw, 1.8rem)', margin: '0 0 4px 0' }}>Tool Daily Reports</h1>
+                    <p className="text-muted" style={{ margin: 0, fontSize: '0.85rem' }}>Select a checklist to record today's maintenance activities</p>
+                </div>
+
+                <div className="d-flex align-items-center gap-3" style={{ zIndex: 2 }}>
                     <span className="badge bg-light text-primary border px-3 py-2 rounded-pill">Status: Live</span>
                 </div>
             </nav>
 
             <div className="main-content-area">
-                <div className="container">
-                    <div className="back-link" onClick={() => navigate('/Maintenance/Tool')}>
-                        <i className="bi bi-arrow-left"></i> Back to Hub
-                    </div>
+                {/* 🔥 Clean Grid Layout replacing Bootstrap rows/columns */}
+                <div className="reports-grid">
+                    {toolDailyReports.map((report) => (
+                        <div key={report.id} className="module-card" onClick={() => handleCardClick(report)}>
+                            <div className="card-accent-line" style={{ backgroundColor: report.color }}></div>
 
-                    <div className="text-center mb-5">
-                        <h1 style={{ fontWeight: 900, color: '#0f172a', fontSize: '2.5rem' }}>Tool Daily Reports</h1>
-                        <p className="text-muted">Select a checklist to record today's maintenance activities</p>
-                    </div>
-
-                    <div className="row g-4 justify-content-center">
-                        {toolDailyReports.map((report) => (
-                            <div key={report.id} className="col-md-6 col-lg-4">
-                                <div className="module-card" onClick={() => handleCardClick(report)}>
-                                    <div className="card-accent-line" style={{ backgroundColor: report.color }}></div>
-
-                                    {/* ✅ Live / Dev Badge */}
-                                    <div className={`status-badge ${report.isLive ? 'status-live' : 'status-dev'}`}>
-                                        {report.isLive ? (
-                                            <><i className="bi bi-broadcast pulse-icon"></i> Live</>
-                                        ) : (
-                                            <><i className="bi bi-gear-wide-connected spin-icon"></i> Under Development</>
-                                        )}
-                                    </div>
-
-                                    <div className="icon-wrapper" style={{ backgroundColor: `${report.color}15`, color: report.color }}>
-                                        <i className={`bi ${report.icon}`}></i>
-                                    </div>
-                                    <h3 className="card-title-custom">{report.title}</h3>
-                                    <div className="meta-tag">Form: <b>{report.formNo}</b></div>
-                                    <div className="meta-tag">Resp: <b>{report.responsibility}</b></div>
-                                    <div className="mt-4 text-end">
-                                        <i className="bi bi-arrow-right-circle-fill" style={{ fontSize: '1.5rem', color: report.color }}></i>
-                                    </div>
-                                </div>
+                            {/* ✅ Live / Dev Badge */}
+                            <div className={`status-badge ${report.isLive ? 'status-live' : 'status-dev'}`}>
+                                {report.isLive ? (
+                                    <><i className="bi bi-broadcast pulse-icon"></i> Live</>
+                                ) : (
+                                    <><i className="bi bi-gear-wide-connected spin-icon"></i> Under Development</>
+                                )}
                             </div>
-                        ))}
-                    </div>
+
+                            <div className="icon-wrapper" style={{ backgroundColor: `${report.color}15`, color: report.color }}>
+                                <i className={`bi ${report.icon}`}></i>
+                            </div>
+                            <h3 className="card-title-custom">{report.title}</h3>
+                            <div className="meta-tag">Form: <b>{report.formNo}</b></div>
+                            <div className="meta-tag">Resp: <b>{report.responsibility}</b></div>
+                            <div className="mt-4 text-end">
+                                <i className="bi bi-arrow-right-circle-fill" style={{ fontSize: '1.5rem', color: report.color }}></i>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
 

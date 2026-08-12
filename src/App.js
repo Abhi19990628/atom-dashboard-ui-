@@ -17,6 +17,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Core Components
+import CodeViewer from "./components/CodeViewer";
+import { UserProvider } from "./context/UserContext";
 import Auth from "./components/Auth";
 import Dashboard from "./components/Dashboard";
 import AssignMachine from "./components/AssignMachine";
@@ -259,11 +261,12 @@ function App() {
   };
 
   return (
-    <Router>
+     <UserProvider>
+      <Router>
       <ToastContainer
         position="top-right"
         autoClose={3000}
-        theme="dark"
+        theme="light"
         newestOnTop
         closeOnClick
         pauseOnHover
@@ -627,6 +630,8 @@ function App() {
   element={<AnalysisHubV2 />}
 /> */}
 
+     <Route path="/view-code" element={<CodeViewer />} />
+
           <Route
             path="*"
             element={
@@ -666,6 +671,8 @@ function App() {
         </Routes>
       </div>
     </Router>
+   </UserProvider>
+    
   );
 }
 

@@ -75,7 +75,17 @@ const MachineWeeklyReports = () => {
             <style>{`
                 .maintenance-page-wrapper { min-height: 100vh; background-color: #f4f7fa; font-family: 'Plus Jakarta Sans', sans-serif; }
                 
-                .hub-simple-navbar { position: fixed; top: 0; width: 100%; height: 70px; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); display: flex; align-items: center; padding: 0 40px; border-bottom: 1px solid rgba(231, 234, 243, 0.7); z-index: 10000; }
+                .hub-simple-navbar { position:sticky; 
+        top: 0; 
+        background: #fff; 
+        min-height: 100px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 0 2rem; 
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+        z-index: 1000; 
+        gap: 15px;  }
                 
                 /* ✅ Nav and Back Button Styles */
                 .nav-left-group { display: flex; align-items: center; gap: 15px; }
@@ -84,7 +94,7 @@ const MachineWeeklyReports = () => {
                 .nav-text-brand { font-weight: 800; color: #1e293b; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.3s; }
                 .nav-text-brand:hover { color: #4f46e5; }
                 
-                .main-content-area { padding: 120px 20px 80px; max-width: 1200px; margin: 0 auto; }
+                .main-content-area { padding: 50px 0px  80px 0px; max-width: 1700px; margin: 0 auto; }
 
                 .page-header { margin-bottom: 60px; }
                 .page-header h1 { font-weight: 900; color: #0f172a; font-size: 3rem; letter-spacing: -1.5px; margin-bottom: 10px; }
@@ -143,29 +153,48 @@ const MachineWeeklyReports = () => {
                 .modal-btn-icon { width: 42px; height: 42px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
             `}</style>
 
-            <nav className="hub-simple-navbar">
-                <div className="nav-left-group">
-                    {/* ✅ New Back Button Added Here */}
-                    <button className="nav-back-btn" onClick={() => navigate('/Maintenance/Machine')} title="Go Back">
-                        <i className="bi bi-arrow-left"></i>
-                    </button>
-                    
-                    <div className="nav-text-brand" onClick={() => navigate('/Maintenance/Machine')}>
-                        <i className="bi bi-shield-check-fill text-primary"></i> 
-                        <span>Maintenance Master</span>
-                    </div>
-                </div>
-            </nav>
+           <nav className="hub-simple-navbar" >
+    
+    {/* Left Side: Back Button & Brand */}
+    <div className="nav-left-group" style={{ display: 'flex', alignItems: 'center', gap: '12px', zIndex: 2 }}>
+        <button 
+            className="nav-back-btn" 
+            onClick={() => navigate('/Maintenance/Machine')} 
+            title="Go Back"
+            style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}
+        >
+            <i className="bi bi-arrow-left-circle "></i>
+        </button>
+        
+        <div className="nav-text-brand" onClick={() => navigate('/Maintenance/Machine')} style={{ fontWeight: 800, color: '#3b82f6', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            <i className="bi bi-shield-check-fill"></i> 
+            <span>Back To Maintenance </span>
+        </div>
+    </div>
 
+    {/* Exact Center: Page Header Title & Subtitle */}
+    <header className="page-header text-center" style={{ 
+        position: 'absolute', 
+        left: '50%', 
+        transform: 'translateX(-50%)', 
+        width: 'max-content',
+        pointerEvents: 'none',
+        margin: 0
+    }}>
+        <h1 style={{ fontWeight: 900, color: '#3b82f6', fontSize: 'clamp(1.2rem, 3vw, 2rem)', margin: '0 0 2px 0' }}>
+            Select Machine
+        </h1>
+        <p className="text-muted" style={{ margin: 0, fontSize: '0.8rem' }}>
+            High-precision weekly preventive maintenance logs.
+        </p>
+    </header>
+</nav>
             <div className="main-content-area">
-                <header className="page-header text-center">
-                    <h1>Select Machine</h1>
-                    <p>High-precision weekly preventive maintenance logs.</p>
-                </header>
+               
 
                 <div className="row g-4">
                     {machineList.map((machine) => (
-                        <div key={machine.id} className="col-12 col-md-6 col-lg-4">
+                        <div key={machine.id} className="col-12 col-md-6 col-lg-3">
                             <div className="premium-card" onClick={() => handleCardClick(machine)}>
                                 <div className="card-accent" style={{backgroundColor: machine.color}}></div>
                                 

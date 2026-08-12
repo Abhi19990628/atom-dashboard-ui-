@@ -47,9 +47,9 @@ const ToolWeekly = () => {
             <style>{`
                 .maintenance-page-wrapper { position: relative; min-height: 100vh; background-color: #f8fafc; font-family: 'Inter', sans-serif; overflow-x: hidden; }
                 .hub-main-navbar { position: fixed; top: 0; width: 100%; height: 75px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #eef2f6; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-                .nav-brand-section { font-weight: 800; color: #4f46e5; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+                .nav-brand-section { font-weight: 800; color: #3b82f6; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; cursor: pointer; }
 
-                .main-content-area { padding: 110px 15px 80px; max-width: 1200px; margin: 0 auto; }
+                .main-content-area { padding: 110px 15px 80px; max-width: 1540px; margin-left: 20px; }
                 .back-link { cursor: pointer; color: #64748b; font-weight: 700; margin-bottom: 2rem; display: inline-flex; align-items: center; gap: 8px; }
 
                 .report-card-ui { background: white; border-radius: 24px; padding: 30px 25px; border: 1px solid #eef2f6; transition: 0.3s; cursor: pointer; height: 100%; position: relative; display: flex; flex-direction: column; }
@@ -82,19 +82,26 @@ const ToolWeekly = () => {
 
             <nav className="hub-main-navbar">
                 <div className="nav-brand-section" onClick={() => navigate('/Maintenance/Tool')}>
-                    <i className="bi bi-calendar3"></i> <span>Tool Weekly Reports</span>
+                    <i className="bi bi-arrow-left-circle"></i> <span>Back To Tool</span>
                 </div>
+                  <header  className="text-center" style={{ 
+                     position: 'absolute', 
+                     left: '50%', 
+                     transform: 'translateX(-50%)', 
+                     width: 'max-content',
+                    pointerEvents: 'none' /* Prevents header from blocking clicks */
+                  }}>
+                    <h1 style={{ fontWeight: 900, color: '#3b82f6', fontSize: 'clamp(1.2rem, 3vw, 1.8rem)', margin: '0 0 4px 0' }}>Tool Weekly Reports</h1>
+                    <p className="text-muted" style={{ margin: 0, fontSize: '0.85rem' }}>Select a checklist to record weekly maintenance activities</p>
+                </header>
             </nav>
 
             <div className="main-content-area">
-                <div className="back-link" onClick={() => navigate('/Maintenance/Tool')}>
+                {/* <div className="back-link" onClick={() => navigate('/Maintenance/Tool')}>
                     <i className="bi bi-arrow-left"></i> Back to Hub
-                </div>
+                </div> */}
 
-                <header className="text-center mb-5 px-2">
-                    <h1 style={{ fontWeight: 900, color: '#0f172a', fontSize: 'clamp(1.8rem, 5vw, 2.8rem)' }}>Tool Weekly Reports</h1>
-                    <p className="text-muted">Select a checklist to record weekly maintenance activities</p>
-                </header>
+               
 
                 <div className="row g-4 px-2">
                     {/* 🔥 Correct variable name 'weeklyToolSubReports' used here */}
