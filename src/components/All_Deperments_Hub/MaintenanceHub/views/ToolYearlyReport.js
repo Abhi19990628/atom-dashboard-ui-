@@ -47,12 +47,12 @@ const ToolYearlyReport = () => {
                 /* Navbar */
                 .hub-main-navbar { position: fixed; top: 0; width: 100%; height: 75px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #eef2f6; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
                 @media (min-width: 768px) { .hub-main-navbar { padding: 0 40px; } }
-                .nav-brand-section { font-weight: 800; color: #06b6d4; font-size: 1.25rem; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+                .nav-brand-section { font-weight: 800; color: #3b82f6; font-size: 1.25rem; display: flex; align-items: center; gap: 12px; cursor: pointer; }
 
                 /* Layout */
-                .main-content-area { padding: 110px 15px 80px; max-width: 1200px; margin: 0 auto; }
+                .main-content-area { padding: 110px 15px 80px; max-width: 1540px; margin-left:30px; }
                 .back-link { cursor: pointer; color: #64748b; font-weight: 700; margin-bottom: 2rem; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.9rem; }
-                .back-link:hover { color: #06b6d4; }
+                .back-link:hover { color: #3b82f6; }
 
                 /* Card Design */
                 .report-card-ui { background: white; border-radius: 24px; padding: 35px 25px; border: 1px solid #eef2f6; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; height: 100%; position: relative; display: flex; flex-direction: column; }
@@ -98,19 +98,26 @@ const ToolYearlyReport = () => {
 
             <nav className="hub-main-navbar">
                 <div className="nav-brand-section" onClick={() => navigate('/Maintenance/Tool')}>
-                    <i className="bi bi-calendar-event-fill"></i> <span>Tool Yearly Reports</span>
+                    <i className="bi bi-arrow-left-circle"></i> <span>Tool Yearly Reports</span>
                 </div>
+                 <header  className="text-center" style={{ 
+                     position: 'absolute', 
+                     left: '50%', 
+                     transform: 'translateX(-50%)', 
+                     width: 'max-content',
+                    pointerEvents: 'none' /* Prevents header from blocking clicks */
+                  }}>
+                    <h1 style={{ fontWeight: 900, color: '#3b82f6', fontSize: 'clamp(1.2rem, 3vw, 1.8rem)', margin: '0 0 4px 0' }}>Tooling Asset Management</h1>
+                    <p className="text-muted" style={{ margin: 0, fontSize: '0.85rem' }}>Yearly master lists and annual fixture audits</p>
+                </header>
             </nav>
 
             <div className="main-content-area">
-                <div className="back-link" onClick={() => navigate('/Maintenance/Tool')}>
+                {/* <div className="back-link" onClick={() => navigate('/Maintenance/Tool')}>
                     <i className="bi bi-arrow-left"></i> Back to Hub
-                </div>
+                </div> */}
 
-                <header className="text-center mb-5 px-3">
-                    <h1 style={{ fontWeight: 900, color: '#0f172a', fontSize: 'clamp(2rem, 5vw, 3rem)' }}>Tooling Asset Management</h1>
-                    <p className="text-muted">Yearly master lists and annual fixture audits</p>
-                </header>
+               
 
                 <div className="row g-4 px-2">
                     {toolYearlyReports.map((report) => (

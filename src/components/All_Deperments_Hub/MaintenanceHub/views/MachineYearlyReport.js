@@ -40,12 +40,23 @@ const MachineYearlyReport = () => {
                 .maintenance-page-wrapper { position: relative; min-height: 100vh; background-color: #f8fafc; font-family: 'Inter', sans-serif; overflow-x: hidden; }
                 
                 /* Navbar Style */
-                .hub-main-navbar { position: fixed; top: 0; width: 100%; height: 75px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #eef2f6; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+                .hub-main-navbar {  position: sticky; 
+        top: 0; 
+        background: #fff; 
+        min-height: 100px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 0 2rem; 
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+        z-index: 1000; 
+        gap: 15px;
+        }
                 @media (min-width: 768px) { .hub-main-navbar { padding: 0 40px; } }
-                .nav-brand-section { font-weight: 800; color: #f59e0b; font-size: 1.25rem; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+                .nav-brand-section { font-weight: 800; color: #3b82f6; font-size: 1.25rem; display: flex; align-items: center; gap: 12px; cursor: pointer; }
 
                 /* Content Area */
-                .main-content-area { padding: 110px 15px 80px; max-width: 1200px; margin: 0 auto; }
+                .main-content-area { padding: 50px 1px 80px; max-width: 1500px; margin-left: 20px; }
                 .back-link { cursor: pointer; color: #64748b; font-weight: 700; margin-bottom: 1.5rem; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.9rem; }
                 .back-link:hover { color: #f59e0b; }
 
@@ -91,25 +102,39 @@ const MachineYearlyReport = () => {
                 .modal-btn-icon { width: 42px; height: 42px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
             `}</style>
 
-            <nav className="hub-main-navbar">
-                <div className="nav-brand-section" onClick={() => navigate('/Maintenance/Machine')}>
-                    <i className="bi bi-calendar-range-fill"></i> <span>Machine Yearly Reports</span>
-                </div>
-            </nav>
+              <nav className="hub-main-navbar">
+    {/* Left Side: Back Button */}
+    <div className="nav-brand-section" onClick={() => navigate('/Maintenance/Machine')} style={{ position: 'relative', zIndex: 2 }}>
+        <i className="bi bi-arrow-left-circle"></i> <span>Back To Maintenance</span>
+    </div>
+    
+    {/* Exact Center: Header */}
+    <header className="text-center" style={{ 
+        position: 'absolute', 
+        left: '50%', 
+        transform: 'translateX(-50%)', 
+        width: 'max-content',
+        pointerEvents: 'none' /* Prevents header from blocking clicks */
+    }}>
+        <h1 style={{ fontWeight: 900, color: '#3b82f6', fontSize: 'clamp(1.2rem, 3vw, 1.8rem)', margin: '0 0 4px 0' }}>
+            Annual Assest Management
+        </h1>
+        <p className="text-muted" style={{ margin: 0, fontSize: '0.85rem' }}>
+           Master lists, preventive plans, and overhauling schedules
+        </p>
+    </header>
+</nav>
 
             <div className="main-content-area">
-                <div className="back-link" onClick={() => navigate('/Maintenance/Machine')}>
+                {/* <div className="back-link" onClick={() => navigate('/Maintenance/Machine')}>
                     <i className="bi bi-arrow-left"></i> Back to Hub
-                </div>
+                </div> */}
 
-                <header className="text-center mb-5 px-3">
-                    <h1 style={{ fontWeight: 900, color: '#0f172a', fontSize: 'clamp(1.8rem, 5vw, 2.8rem)' }}>Annual Asset Management</h1>
-                    <p className="text-muted">Master lists, preventive plans, and overhauling schedules</p>
-                </header>
+             
 
                 <div className="row g-4 justify-content-center px-2">
                     {machineYearlyReports.map((report) => (
-                        <div key={report.id} className="col-12 col-md-6 col-lg-4">
+                        <div key={report.id} className="col-12 col-md-6 col-lg-3">
                             <div className="report-card-ui h-100" onClick={() => handleCardClick(report)}>
                                 <div className="card-header-line" style={{backgroundColor: report.color}}></div>
 

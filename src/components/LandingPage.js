@@ -1,3 +1,1152 @@
+// import { useNavigate } from "react-router-dom";
+// import {
+//   Factory,
+//   Award,
+//   Shield,
+//   Lightbulb,
+//   Heart,
+//   Eye,
+//   CheckCircle,
+//   Camera,
+//   Gauge,
+//   Database,
+//   Bell,
+//   Cpu,
+//   Wrench,
+//   ClipboardCheck,
+//   Cog,
+//   Menu,
+//   X,
+// } from "lucide-react";
+// import {
+//   BsPeopleFill,
+//   BsBuilding,
+//   BsGearFill,
+// } from "react-icons/bs";
+// import { Mail, Phone, Clock, Linkedin, Twitter, Youtube } from "lucide-react";
+// import { motion, useScroll, useTransform, useInView } from "framer-motion";
+// import { useRef, useState } from "react";
+// import logo_head from "../logo_head.png";
+// import TravelCarousel from "./TravelCarousel";
+// import ValueCardsSection from "./ValueCardsSection";
+// import ProductsSection from "./ProductsSection";
+// export default function LandingPage() {
+//   const navigate = useNavigate();
+//   const { scrollYProgress } = useScroll();
+//   const heroRef = useRef(null);
+//   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+//   // Parallax and scroll effects
+//   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0.3]);
+//   const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
+//   const heroY = useTransform(scrollYProgress, [0, 0.5], [0, 100]);
+
+//   const coreValues = [
+//     { icon: Lightbulb, label: "Innovation", color: "cyan" },
+//     { icon: Award, label: "Excellence", color: "yellow" },
+//     { icon: Shield, label: "Integrity", color: "cyan" },
+//     { icon: Eye, label: "Transparency", color: "yellow" },
+//     { icon: CheckCircle, label: "Accountability", color: "cyan" },
+//     { icon: Heart, label: "Social Responsibility", color: "yellow" },
+//   ];
+
+//   const technologies = [
+//   {
+//     icon: Camera,
+//     title: "AI-Powered Visual Inspection",
+//     description:
+//       "Automated NG (Not Good) and OK part detection with AI camera system",
+//     subtitle: "Real-time quality verification on every machine",
+//     image: "./card1.png",
+//   },
+//   {
+//     icon: Gauge,
+//     title: "Real-Time Machine Intelligence",
+//     description:
+//       "Live monitoring: Shut Height, Tool ID, Machine Count",
+//     subtitle: "Instant email alerts for any parameter changes",
+//     image: "./card2.png",
+//   },
+//   {
+//     icon: Database,
+//     title: "Comprehensive Data Tracking",
+//     description:
+//       "Live counts: Machine-wise, Part-wise, Customer-wise",
+//     subtitle: "Complete visibility from everywhere, anytime",
+//     image: "./card3.png",
+//   },
+//   {
+//     icon: Bell,
+//     title: "Intelligent Alert System",
+//     description:
+//       "Automated email notifications for tool changes, height adjustments",
+//     subtitle: "Proactive maintenance alerts",
+//     image: "./card4.png",
+//   },
+// ];
+
+//   const teams = [
+//     { icon: Cpu, label: "IT & IoT Team" },
+//     { icon: Factory, label: "Production Team" },
+//     { icon: Wrench, label: "Maintenance Team" },
+//     { icon: ClipboardCheck, label: "Quality Team" },
+//     { icon: Cog, label: "Tool Team" },
+//   ];
+
+//   // Animation variants
+//   const fadeInUp = {
+//     hidden: { opacity: 0, y: 60 },
+//     visible: {
+//       opacity: 1,
+//       y: 0,
+//       transition: { duration: 0.6, ease: "easeOut" },
+//     },
+//   };
+
+//   const staggerContainer = {
+//     hidden: { opacity: 0 },
+//     visible: {
+//       opacity: 1,
+//       transition: {
+//         staggerChildren: 0.15,
+//         delayChildren: 0.2,
+//       },
+//     },
+//   };
+
+//   const buttonHover = {
+//     rest: { scale: 1 },
+//     hover: { scale: 1.05, transition: { duration: 0.2 } },
+//   };
+
+//   // Section Ref for scroll animations
+//   const SectionWrapper = ({ children, delay = 0, className = "" }) => {
+//     const ref = useRef(null);
+//     const isInView = useInView(ref, {
+//       once: false,
+//       amount: 0.2,
+//       margin: "-100px 0px -100px 0px",
+//     });
+
+//     return (
+//       <motion.div
+//         ref={ref}
+//         initial="hidden"
+//         animate={isInView ? "visible" : "hidden"}
+//         variants={fadeInUp}
+//         transition={{ delay }}
+//         className={className}
+//       >
+//         {children}
+//       </motion.div>
+//     );
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-[#0f172a] text-[#f1f5f9] overflow-x-hidden">
+//       {/* Hero Section with Parallax */}
+//       <motion.div
+//         ref={heroRef}
+//         style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
+//         className="relative bg-gradient-to-br from-[#1e3a8a] via-[#1e293b] to-[#0f172a] overflow-hidden min-h-screen"
+//       >
+//         {/* Animated Background with floating elements */}
+//         <div className="absolute inset-0">
+//           <motion.div
+//             animate={{
+//               x: [0, 30, -20, 0],
+//               y: [0, -20, 30, 0],
+//               scale: [1, 1.1, 0.9, 1],
+//             }}
+//             transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+//             className="absolute top-20 left-10 w-48 md:w-72 h-48 md:h-72 bg-[#06b6d4] rounded-full mix-blend-multiply filter blur-xl opacity-30"
+//           />
+//           <motion.div
+//             animate={{
+//               x: [0, -40, 20, 0],
+//               y: [0, 30, -10, 0],
+//               scale: [1, 0.8, 1.2, 1],
+//             }}
+//             transition={{
+//               duration: 18,
+//               repeat: Infinity,
+//               ease: "easeInOut",
+//               delay: 1,
+//             }}
+//             className="absolute top-40 right-10 w-48 md:w-72 h-48 md:h-72 bg-[#fbbf24] rounded-full mix-blend-multiply filter blur-xl opacity-30"
+//           />
+//           <motion.div
+//             animate={{
+//               x: [0, 50, -30, 0],
+//               y: [0, -30, 40, 0],
+//               scale: [1, 1.2, 0.7, 1],
+//             }}
+//             transition={{
+//               duration: 22,
+//               repeat: Infinity,
+//               ease: "easeInOut",
+//               delay: 2,
+//             }}
+//             className="absolute -bottom-8 left-1/2 w-48 md:w-72 h-48 md:h-72 bg-[#10b981] rounded-full mix-blend-multiply filter blur-xl opacity-30"
+//           />
+//           <div
+//             className="absolute inset-0"
+//             style={{
+//               backgroundImage:
+//                 "repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(6, 182, 212, 0.03) 35px, rgba(6, 182, 212, 0.03) 70px), repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(251, 191, 36, 0.03) 35px, rgba(251, 191, 36, 0.03) 70px)",
+//             }}
+//           />
+//         </div>
+
+//         {/* Navigation - Transparent with blur only */}
+//         <nav className="relative z-10 flex items-center justify-between px-6 sm:px-8 md:px-12 py-4 md:py-5 ">
+//           <motion.div
+//             initial={{ opacity: 0, x: -50 }}
+//             animate={{ opacity: 1, x: 0 }}
+//             transition={{ duration: 0.5 }}
+//             className="flex items-center gap-2 group cursor-pointer"
+//             onClick={() => navigate("/")}
+//           >
+//             <div className="flex items-center gap-1.5 sm:gap-2">
+//               <motion.div
+//                 whileHover={{ scale: 1.05, rotate: 3 }}
+//                 initial={{ scale: 0, rotate: -180 }}
+//                 animate={{ scale: 1, rotate: 0 }}
+//                 transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+//                 className="flex items-center"
+//               >
+//                 <img
+//                   src={logo_head}
+//                   alt="AtomOne Logo"
+//                   className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain"
+//                 />
+//                 <Factory className="hidden" />
+//               </motion.div>
+//               <motion.span
+//                 initial={{ opacity: 0, x: -20 }}
+//                 animate={{ opacity: 1, x: 0 }}
+//                 transition={{ duration: 0.5, delay: 0.2 }}
+//                 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#f1f5f9] to-[#94a3b8] text-transparent bg-clip-text tracking-tight"
+//               >
+//                 AtomOne
+//               </motion.span>
+//             </div>
+//           </motion.div>
+
+//           {/* Desktop Navigation - Enhanced Buttons */}
+//           <div className="hidden sm:flex gap-4 md:gap-5">
+//             <motion.button
+//               variants={buttonHover}
+//               initial="rest"
+//               whileHover="hover"
+//               whileTap={{ scale: 0.95 }}
+//               onClick={() => navigate("/login")}
+//               className="px-6 md:px-8 py-2.5 md:py-3 text-sm md:text-base font-medium bg-transparent backdrop-blur-sm border-2 border-[#06b6d4] text-[#06b6d4] rounded-xl  transition-all duration-300 hover:shadow-lg hover:shadow-[#06b6d4]/50 hover:border-transparent"
+//             >
+//               Login
+//             </motion.button>
+//             <motion.button
+//               variants={buttonHover}
+//               initial="rest"
+//               whileHover="hover"
+//               whileTap={{ scale: 0.95 }}
+//               onClick={() => navigate("/signup")}
+//               className="px-6 md:px-8 py-2.5 md:py-3 text-sm md:text-base font-medium bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-[#0f172a] rounded-xl hover:shadow-2xl hover:shadow-[#fbbf24]/50 transition-all duration-300 hover:scale-105"
+//             >
+//               Sign Up
+//             </motion.button>
+//           </div>
+
+//           {/* Mobile Menu Button */}
+//           <button
+//             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+//             className="sm:hidden p-2.5 bg-[#06b6d4]/10 backdrop-blur-sm rounded-xl border border-[#06b6d4]/30 hover:bg-[#06b6d4]/20 transition-all duration-300"
+//           >
+//             {mobileMenuOpen ? (
+//               <X className="w-5 h-5 text-[#06b6d4]" />
+//             ) : (
+//               <Menu className="w-5 h-5 text-[#06b6d4]" />
+//             )}
+//           </button>
+//         </nav>
+
+//         {/* Mobile Menu - Enhanced */}
+//         {mobileMenuOpen && (
+//           <motion.div
+//             initial={{ opacity: 0, y: -20 }}
+//             animate={{ opacity: 1, y: 0 }}
+//             exit={{ opacity: 0, y: -20 }}
+//             className="absolute top-[72px] left-0 right-0 z-20 sm:hidden bg-[#0f172a]/95 backdrop-blur-xl border-b border-[#06b6d4]/30 p-5 shadow-xl"
+//           >
+//             <div className="flex flex-col gap-3">
+//               <button
+//                 onClick={() => {
+//                   navigate("/login");
+//                   setMobileMenuOpen(false);
+//                 }}
+//                 className="w-full px-6 py-3 bg-[#06b6d4]/10 border-2 border-[#06b6d4] text-[#06b6d4] rounded-xl hover:bg-[#06b6d4] hover:text-[#0f172a] transition-all duration-300 font-medium"
+//               >
+//                 Login
+//               </button>
+//               <button
+//                 onClick={() => {
+//                   navigate("/signup");
+//                   setMobileMenuOpen(false);
+//                 }}
+//                 className="w-full px-6 py-3 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-[#0f172a] rounded-xl hover:shadow-2xl hover:shadow-[#fbbf24]/50 transition-all duration-300 font-medium"
+//               >
+//                 Sign Up
+//               </button>
+//             </div>
+//           </motion.div>
+//         )}
+
+//         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24 md:py-32 text-center">
+//           {/* Badge Animation */}
+//           <motion.div
+//             initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
+//             animate={{ opacity: 1, scale: 1, rotate: 0 }}
+//             transition={{ duration: 0.5, delay: 0.2, type: "spring" }}
+//             className="mb-4 sm:mb-6 inline-block"
+//           >
+//             <motion.span
+//               whileHover={{ scale: 1.05 }}
+//               className="px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 text-xs sm:text-sm bg-[#06b6d4]/10 backdrop-blur-sm border border-[#06b6d4]/30 rounded-full text-[#06b6d4] inline-flex items-center gap-1 sm:gap-2"
+//             >
+//               <motion.span className="inline-block text-sm sm:text-base">
+//                 🚀
+//               </motion.span>
+//               <span className="hidden xs:inline">
+//                 Industry 4.0 Smart Factory Platform
+//               </span>
+//               <span className="xs:hidden">Industry 4.0</span>
+//             </motion.span>
+//           </motion.div>
+
+//           {/* Main Heading - Responsive Text */}
+//           <div className="mb-6 sm:mb-8">
+//             <motion.h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl text-[#f1f5f9] tracking-tight leading-tight">
+//               {["Where", "Technology", "Speaks", "Louder,"].map(
+//                 (word, index) => (
+//                   <motion.span
+//                     key={index}
+//                     initial={{ opacity: 0, y: 50, rotateX: -90 }}
+//                     animate={{ opacity: 1, y: 0, rotateX: 0 }}
+//                     transition={{
+//                       duration: 0.6,
+//                       delay: 0.4 + index * 0.1,
+//                       type: "spring",
+//                       stiffness: 100,
+//                     }}
+//                     className="inline-block mr-2 sm:mr-3"
+//                   >
+//                     {word}
+//                   </motion.span>
+//                 ),
+//               )}
+//               <br />
+//               <motion.span
+//                 initial={{ opacity: 0, backgroundPosition: "0% 50%" }}
+//                 animate={{ opacity: 1, backgroundPosition: "100% 50%" }}
+//                 transition={{ duration: 1.2, delay: 0.9, ease: "easeOut" }}
+//                 className="bg-gradient-to-r from-[#06b6d4] via-[#fbbf24] to-[#10b981] text-transparent bg-clip-text bg-[length:200%_auto] inline-block text-2xl sm:text-4xl md:text-6xl lg:text-7xl"
+//               >
+//                 Every cut Delivers Perfection.
+//               </motion.span>
+//             </motion.h1>
+//           </div>
+
+//           {/* Subtitle - Responsive */}
+//           <motion.p
+//             initial={{ opacity: 0, scale: 0.9 }}
+//             animate={{ opacity: 1, scale: 1 }}
+//             transition={{ duration: 0.6, delay: 1.2 }}
+//             className="text-base sm:text-xl md:text-2xl lg:text-3xl text-[#94a3b8] mb-8 sm:mb-12 md:mb-16 px-4"
+//           >
+//             <motion.span
+//               initial={{ width: 0 }}
+//               animate={{ width: "auto" }}
+//               transition={{ duration: 1, delay: 1.4 }}
+//               className="inline-block overflow-hidden whitespace-normal sm:whitespace-nowrap"
+//             >
+//               25+ Years of Metal Stamping Excellence | Industry 4.0 Leader
+//             </motion.span>
+//           </motion.p>
+
+//           {/* Statistics Bar - Responsive Grid */}
+//           <motion.div
+//             variants={staggerContainer}
+//             initial="hidden"
+//             animate="visible"
+//             className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 mt-12 sm:mt-16 md:mt-20"
+//           >
+//             {[
+//               {
+//                 icon: BsPeopleFill,
+//                 value: "400+",
+//                 label: "Employees",
+//                 color: "cyan",
+//                 delay: 1.6,
+//               },
+//               {
+//                 icon: BsBuilding,
+//                 value: "3",
+//                 label: "Units",
+//                 color: "yellow",
+//                 delay: 1.7,
+//               },
+//               {
+//                 icon: BsGearFill,
+//                 value: "150+",
+//                 label: "Presses",
+//                 color: "green",
+//                 delay: 1.8,
+//               },
+//             ].map((stat, idx) => {
+//               const Icon = stat.icon;
+//               const borderColor =
+//                 stat.color === "cyan"
+//                   ? "border-[#06b6d4]/30 hover:border-[#06b6d4]"
+//                   : stat.color === "yellow"
+//                   ? "border-[#fbbf24]/30 hover:border-[#fbbf24]"
+//                   : "border-[#10b981]/30 hover:border-[#10b981]";
+//               const shadowColor =
+//                 stat.color === "cyan"
+//                   ? "shadow-[#06b6d4]/20"
+//                   : stat.color === "yellow"
+//                   ? "shadow-[#fbbf24]/20"
+//                   : "shadow-[#10b981]/20";
+//               const iconColor =
+//                 stat.color === "cyan"
+//                   ? "text-[#06b6d4]"
+//                   : stat.color === "yellow"
+//                   ? "text-[#fbbf24]"
+//                   : "text-[#10b981]";
+//               const bgHover =
+//                 stat.color === "cyan"
+//                   ? "group-hover:bg-[#06b6d4]/20"
+//                   : stat.color === "yellow"
+//                   ? "group-hover:bg-[#fbbf24]/20"
+//                   : "group-hover:bg-[#10b981]/20";
+//               return (
+//                 <motion.div
+//                   key={idx}
+//                   variants={fadeInUp}
+//                   whileHover={{ scale: 1.05, y: -5 }}
+//                   transition={{ delay: stat.delay }}
+//                   className={`group flex items-center gap-2 sm:gap-4 bg-gradient-to-br from-[#1e293b]/80 to-[#1e293b]/40 backdrop-blur-xl px-4 sm:px-6 md:px-8 py-3 sm:py-5 md:py-6 rounded-xl sm:rounded-2xl border ${borderColor} transition-all duration-300  ${shadowColor}`}
+//                 >
+//                   <motion.div
+//                     whileHover={{ rotate: 360 }}
+//                     transition={{ duration: 0.5 }}
+//                     className={`p-2 sm:p-3 bg-[#06b6d4]/10 rounded-lg sm:rounded-xl ${bgHover} transition-all duration-300`}
+//                   >
+//                     <Icon
+//                       className={`w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 ${iconColor}`}
+//                     />
+//                   </motion.div>
+//                   <div className="text-left">
+//                     <motion.div
+//                       initial={{ opacity: 0, scale: 0.5 }}
+//                       animate={{ opacity: 1, scale: 1 }}
+//                       transition={{ duration: 0.5, delay: stat.delay + 0.2 }}
+//                       className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-[#f1f5f9] mb-0.5 sm:mb-1"
+//                     >
+//                       {stat.value}
+//                     </motion.div>
+//                     <div className="text-xs sm:text-sm text-[#94a3b8]">
+//                       {stat.label}
+//                     </div>
+//                   </div>
+//                 </motion.div>
+//               );
+//             })}
+//           </motion.div>
+
+//           {/* Scroll Indicator */}
+//           <motion.div
+//             animate={{ y: [0, 10, 0] }}
+//             transition={{ duration: 1.5, repeat: Infinity, delay: 2 }}
+//             className="absolute bottom-5 sm:bottom-10 left-1/2 -translate-x-1/2 cursor-pointer"
+//             onClick={() =>
+//               window.scrollTo({ top: window.innerHeight, behavior: "smooth" })
+//             }
+//           >
+//             <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 border-[#06b6d4] rounded-full flex justify-center">
+//               <motion.div
+//                 animate={{ y: [0, 12, 0] }}
+//                 transition={{ duration: 1.5, repeat: Infinity }}
+//                 className="w-1 h-2 sm:h-3 bg-[#06b6d4] rounded-full mt-2"
+//               />
+//             </div>
+//           </motion.div>
+//         </div>
+//       </motion.div>
+
+//       {/* Rest of your sections remain the same... */}
+//       {/* Vision Section (UPAR) */}
+
+//       <ValueCardsSection />
+
+//       {/* Mission Section (NICHE) */}
+
+//       {/* Core Values */}
+//       <SectionWrapper>
+//         <div className="relative bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] py-12 sm:py-16">
+//           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-8">
+//             <motion.h2
+//               initial={{ opacity: 0, y: 30 }}
+//               whileInView={{ opacity: 1, y: 0 }}
+//               transition={{ duration: 0.5 }}
+//               viewport={{ once: false, amount: 0.3 }}
+//               className="text-2xl sm:text-3xl md:text-4xl mb-8 sm:mb-12 text-center text-[#f1f5f9]"
+//             >
+//               Core Values
+//             </motion.h2>
+//             <motion.div
+//               variants={staggerContainer}
+//               initial="hidden"
+//               whileInView="visible"
+//               viewport={{ once: false, amount: 0.2 }}
+//               className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-6"
+//             >
+//               {coreValues.map((value, index) => {
+//                 const Icon = value.icon;
+//                 const colorClass =
+//                   value.color === "cyan"
+//                     ? "text-[#06b6d4] bg-[#06b6d4]/10"
+//                     : "text-[#fbbf24] bg-[#fbbf24]/10";
+//                 return (
+//                   <motion.div
+//                     key={index}
+//                     variants={fadeInUp}
+//                     whileHover={{ y: -8, scale: 1.05 }}
+//                     className="text-center"
+//                   >
+//                     <motion.div
+//                       whileHover={{ rotate: 360 }}
+//                       transition={{ duration: 0.4 }}
+//                       className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 ${colorClass} rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-4`}
+//                     >
+//                       <Icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
+//                     </motion.div>
+//                     <div className="text-xs sm:text-sm md:text-base text-[#f1f5f9]">
+//                       {value.label}
+//                     </div>
+//                   </motion.div>
+//                 );
+//               })}
+//             </motion.div>
+//           </div>
+//         </div>
+//       </SectionWrapper>
+
+//       {/* Advanced Technology Section */}
+//       <SectionWrapper>
+//         <div className="relative bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] py-16 sm:py-20 md:py-24 overflow-hidden">
+//           <div className="absolute inset-0 opacity-10">
+//             <motion.div
+//               animate={{ x: [0, 50, -30, 0], y: [0, -30, 20, 0] }}
+//               transition={{ duration: 20, repeat: Infinity }}
+//               className="absolute top-1/4 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-[#06b6d4] rounded-full filter blur-3xl"
+//             />
+//             <motion.div
+//               animate={{ x: [0, -40, 30, 0], y: [0, 40, -20, 0] }}
+//               transition={{ duration: 18, repeat: Infinity, delay: 1 }}
+//               className="absolute bottom-1/4 right-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-[#fbbf24] rounded-full filter blur-3xl"
+//             />
+//           </div>
+
+//           <div className="relative z-10 max-w-full mx-auto px-4 sm:px-6 md:px-8">
+//             <motion.div
+//               initial={{ opacity: 0, y: 30 }}
+//               whileInView={{ opacity: 1, y: 0 }}
+//               transition={{ duration: 0.5 }}
+//               viewport={{ once: false, amount: 0.3 }}
+//               className="text-center mb-8 sm:mb-12 md:mb-16"
+//             >
+//               <div className="inline-block mb-4 sm:mb-6">
+//                 <span className="px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm bg-gradient-to-r from-[#06b6d4]/20 to-[#fbbf24]/20 backdrop-blur-sm border border-[#06b6d4]/30 rounded-full text-[#06b6d4]">
+//                   ⚡ Powered by AI & IoT
+//                 </span>
+//               </div>
+//               <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-4 sm:mb-6 text-[#f1f5f9] px-4">
+//                 Industry 4.0 Smart Factory
+//               </h2>
+//               <p className="text-lg sm:text-xl md:text-2xl bg-gradient-to-r from-[#06b6d4] to-[#fbbf24] text-transparent bg-clip-text">
+//                 Advanced Monitoring System
+//               </p>
+//             </motion.div>
+
+//             {/* <motion.div
+//               variants={staggerContainer}
+//               initial="hidden"
+//               whileInView="visible"
+//               viewport={{ once: false, amount: 0.1 }}
+//               className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8"
+//             >
+//               {technologies.map((tech, index) => {
+//                 const Icon = tech.icon;
+//                 return (
+//                   <motion.div
+//                     key={index}
+//                     variants={fadeInUp}
+//                     whileHover="hover"
+//                     className="group relative bg-gradient-to-br from-[#1e293b]/80 to-[#1e293b]/40 backdrop-blur-xl rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 border border-[#06b6d4]/20 hover:border-[#06b6d4] transition-all duration-500 hover:shadow-2xl hover:shadow-[#06b6d4]/20"
+//                   >
+//                     <div className="absolute inset-0 bg-gradient-to-br from-[#06b6d4]/0 to-[#06b6d4]/5 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+//                     <div className="relative flex flex-col sm:flex-row items-start gap-3 sm:gap-5">
+//                       <motion.div
+//                         whileHover={{ rotate: 10, scale: 1.1 }}
+//                         className="p-3 sm:p-4 bg-gradient-to-br from-[#06b6d4]/20 to-[#06b6d4]/5 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#06b6d4]/20"
+//                       >
+//                         <Icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-[#06b6d4]" />
+//                       </motion.div>
+//                       <div>
+//                         <h3 className="text-lg sm:text-xl md:text-2xl mb-2 sm:mb-3 text-[#f1f5f9] group-hover:text-[#06b6d4] transition-colors duration-300">
+//                           {tech.title}
+//                         </h3>
+//                         <p className="text-sm sm:text-base text-[#94a3b8] mb-2 sm:mb-3 leading-relaxed">
+//                           {tech.description}
+//                         </p>
+//                         <p className="text-xs sm:text-sm text-[#06b6d4] flex items-center gap-2">
+//                           <motion.span
+//                             animate={{ scale: [1, 1.2, 1] }}
+//                             transition={{ duration: 1, repeat: Infinity }}
+//                             className="w-1.5 h-1.5 bg-[#06b6d4] rounded-full"
+//                           />
+//                           {tech.subtitle}
+//                         </p>
+//                       </div>
+//                     </div>
+//                   </motion.div>
+//                 );
+//               })}
+//             </motion.div> */}
+//             <motion.div
+//   variants={staggerContainer}
+//   initial="hidden"
+//   whileInView="visible"
+//   viewport={{ once: false, amount: 0.1 }}
+//   className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8"
+// >
+//   {technologies.map((tech, index) => {
+//     const Icon = tech.icon;
+
+//     return (
+//       <motion.div
+//         key={index}
+//         variants={fadeInUp}
+//         whileHover={{
+//           y: -6,
+//           scale: 1.01,
+//         }}
+//         className="group relative overflow-hidden bg-gradient-to-br from-[#1e293b]/80 to-[#0f172a]/80 backdrop-blur-xl rounded-2xl p-6 border border-[#06b6d4]/20 hover:border-[#06b6d4]/60 transition-all duration-500"
+//       >
+//         {/* Hover Glow */}
+//         <div className="absolute inset-0 bg-gradient-to-r from-[#06b6d4]/0 via-[#06b6d4]/5 to-[#06b6d4]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+//         <div className="relative flex flex-col lg:flex-row items-center gap-6">
+          
+//           {/* Left Content */}
+//           <div className="flex-1 w-full">
+//             <div className="flex items-start gap-4">
+              
+//               <motion.div
+//                 whileHover={{
+//                   rotate: 10,
+//                   scale: 1.1,
+//                 }}
+//                 className="p-4 bg-gradient-to-br from-[#06b6d4]/20 to-[#06b6d4]/5 rounded-xl flex items-center justify-center flex-shrink-0 "
+//               >
+//                 <Icon className="w-8 h-8 text-[#06b6d4]" />
+//               </motion.div>
+
+//               <div>
+//                 <h3 className="text-xl lg:text-2xl font-semibold text-[#f1f5f9] group-hover:text-[#06b6d4] transition-colors duration-300 mb-2">
+//                   {tech.title}
+//                 </h3>
+
+//                 <p className="text-[#94a3b8] leading-relaxed mb-3">
+//                   {tech.description}
+//                 </p>
+
+//                 <p className="text-sm text-[#06b6d4] flex items-center gap-2">
+//                   <motion.span
+//                     animate={{
+//                       scale: [1, 1.3, 1],
+//                     }}
+//                     transition={{
+//                       duration: 1.5,
+//                       repeat: Infinity,
+//                     }}
+//                     className="w-2 h-2 rounded-full bg-[#06b6d4]"
+//                   />
+//                   {tech.subtitle}
+//                 </p>
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* Right Image */}
+//           <motion.div
+//             whileHover={{
+//               scale: 1.05,
+//             }}
+//             className="hidden lg:block w-[240px] h-[150px] flex-shrink-0 overflow-hidden rounded-xl border border-[#06b6d4]/20"
+//           >
+//             <img
+//               src={tech.image}
+//               alt={tech.title}
+//               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+//             />
+//           </motion.div>
+//         </div>
+//       </motion.div>
+//     );
+//   })}
+// </motion.div>
+//           </div>
+//         </div>
+//       </SectionWrapper>
+
+//       {/* Team Excellence */}
+//       <SectionWrapper>
+//         <div className="relative bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] py-12 sm:py-16">
+//           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-8">
+//             <motion.h2
+//               initial={{ opacity: 0, y: 30 }}
+//               whileInView={{ opacity: 1, y: 0 }}
+//               transition={{ duration: 0.5 }}
+//               viewport={{ once: false, amount: 0.3 }}
+//               className="text-2xl sm:text-3xl md:text-4xl mb-8 sm:mb-12 text-center text-[#f1f5f9]"
+//             >
+//               Our Expert Teams
+//             </motion.h2>
+//             <motion.div
+//               variants={staggerContainer}
+//               initial="hidden"
+//               whileInView="visible"
+//               viewport={{ once: false, amount: 0.2 }}
+//               className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6"
+//             >
+//               {teams.map((team, index) => {
+//                 const Icon = team.icon;
+//                 return (
+//                   <motion.div
+//                     key={index}
+//                     variants={fadeInUp}
+//                     whileHover={{ y: -8, scale: 1.05 }}
+//                     className="bg-[#1e293b] rounded-xl p-4 sm:p-5 md:p-6 text-center border border-[#06b6d4]/20 hover:border-[#fbbf24] transition-colors"
+//                   >
+//                     <motion.div
+//                       whileHover={{ rotate: 360 }}
+//                       transition={{ duration: 0.5 }}
+//                       className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-[#06b6d4]/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 md:mb-4"
+//                     >
+//                       <Icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-[#06b6d4]" />
+//                     </motion.div>
+//                     <div className="text-xs sm:text-sm md:text-base text-[#f1f5f9]">
+//                       {team.label}
+//                     </div>
+//                   </motion.div>
+//                 );
+//               })}
+//             </motion.div>
+//           </div>
+//         </div>
+//       </SectionWrapper>
+
+//       {/* <TravelCarousel /> */}
+
+//       {/* Digital Impact */}
+
+//       <SectionWrapper>
+//         <div className="relative bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] py-10 lg:py-14 mt-0 overflow-hidden">
+//           {/* Ambient Glow */}
+//           <motion.div
+//             animate={{
+//               scale: [1, 1.2, 1],
+//               rotate: [0, 180, 360],
+//             }}
+//             transition={{
+//               duration: 20,
+//               repeat: Infinity,
+//               ease: "linear",
+//             }}
+//             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-[#fbbf24]/5 blur-3xl pointer-events-none"
+//           />
+
+//           <div className="max-w-auto mx-auto px-4 sm:px-6 lg:px-8">
+//             <motion.div
+//               initial={{ opacity: 0, y: 40 }}
+//               whileInView={{ opacity: 1, y: 0 }}
+//               viewport={{ once: false, amount: 0.2 }}
+//               transition={{ duration: 0.7 }}
+//               className="
+//           relative
+//           overflow-hidden
+//           rounded-[32px]
+//           border
+//           border-[#fbbf24]/30
+//           bg-gradient-to-r
+//           from-[#172554]
+//           via-[#1e293b]
+//           to-[#172554]
+//           backdrop-blur-xl
+//           px-6
+//           sm:px-10
+//           lg:px-14
+//           py-6
+//           lg:py-8
+//           shadow-[0_20px_80px_rgba(0,0,0,0.35)]
+//         "
+//             >
+//               {/* Top Accent Line */}
+//               <div className="absolute top-0 left-0 h-[3px] w-full bg-gradient-to-r from-transparent via-[#fbbf24] to-transparent" />
+
+//               {/* Grid Overlay */}
+//               <div
+//                 className="absolute inset-0 opacity-[0.04]"
+//                 style={{
+//                   backgroundImage: `
+//               linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+//               linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)
+//             `,
+//                   backgroundSize: "50px 50px",
+//                 }}
+//               />
+
+//               <div className="relative z-10">
+//                 {/* Header */}
+//                 <div className="text-center mb-6 lg:mb-8">
+//                   <div className="uppercase tracking-[0.35em] text-xs text-[#fbbf24]/80 mb-4">
+//                     Industry 4.0 Performance Metrics
+//                   </div>
+
+//                   <h2
+//                     className="
+//                 text-3xl
+//                 md:text-4xl
+//                 lg:text-5xl
+//                 font-bold
+//                 bg-gradient-to-r
+//                 from-[#fbbf24]
+//                 via-[#fde68a]
+//                 to-[#fbbf24]
+//                 bg-clip-text
+//                 text-transparent
+//                 mb-4
+//               "
+//                   >
+//                     Digital Transformation Impact
+//                   </h2>
+
+//                   <p className="text-slate-400 text-base lg:text-lg max-w-3xl mx-auto">
+//                     Measurable results achieved through smart manufacturing,
+//                     automation, real-time visibility, and continuous
+//                     improvement.
+//                   </p>
+//                 </div>
+
+//                 {/* Stats */}
+//                 <div className="grid grid-cols-2 lg:grid-cols-4">
+//                   {[
+//                     {
+//                       value: "15-20%",
+//                       label: "Machine Utilization",
+//                       sub: "Increment",
+//                     },
+//                     {
+//                       value: "8-12%",
+//                       label: "Operator Efficiency",
+//                       sub: "Increase",
+//                     },
+//                     {
+//                       value: "10-15%",
+//                       label: "Quality Improvement",
+//                       sub: "Reduction in Defects",
+//                     },
+//                     {
+//                       value: "24/7",
+//                       label: "Real-Time Data",
+//                       sub: "Visibility",
+//                     },
+//                   ].map((stat, idx) => (
+//                     <motion.div
+//                       key={idx}
+//                       whileHover={{
+//                         y: -8,
+//                         scale: 1.03,
+//                       }}
+//                       transition={{ duration: 0.25 }}
+//                       className={`
+//                   relative
+//                   text-center
+//                   px-4
+//                   py-3
+//                   ${idx !== 3 ? "lg:border-r lg:border-white/10" : ""}
+//                 `}
+//                     >
+//                       {/* Glow */}
+//                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+//                         <div className="w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full" />
+//                       </div>
+
+//                       <div className="relative">
+//                         <div
+//                           className="
+//                       whitespace-nowrap
+//                       text-4xl
+//                       sm:text-5xl
+//                       lg:text-6xl
+//                       xl:text-7xl
+//                       font-bold
+//                       bg-gradient-to-br
+//                       from-emerald-300
+//                       via-emerald-400
+//                       to-emerald-500
+//                       bg-clip-text
+//                       text-transparent
+//                       mb-3
+//                     "
+//                         >
+//                           {stat.value}
+//                         </div>
+
+//                         <h3 className="text-white text-base lg:text-lg font-semibold mb-1">
+//                           {stat.label}
+//                         </h3>
+
+//                         <p className="text-slate-400 text-sm">{stat.sub}</p>
+//                       </div>
+//                     </motion.div>
+//                   ))}
+//                 </div>
+//               </div>
+//             </motion.div>
+//           </div>
+//         </div>
+//       </SectionWrapper>
+
+//       {/* Products Showcase */}
+//       {/* <SectionWrapper>
+//         <div className="relative bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] py-12 sm:py-16">
+//           <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+//             <motion.h2
+//               initial={{ opacity: 0, y: 30 }}
+//               whileInView={{ opacity: 1, y: 0 }}
+//               transition={{ duration: 0.5 }}
+//               viewport={{ once: false, amount: 0.3 }}
+//               className="text-2xl sm:text-3xl md:text-4xl mb-8 sm:mb-12 text-center text-[#f1f5f9]"
+//             >
+//               Our Products
+//             </motion.h2>
+//             <motion.div
+//               variants={staggerContainer}
+//               initial="hidden"
+//               whileInView="visible"
+//               viewport={{ once: false, amount: 0.2 }}
+//               className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6"
+//             >
+//               {products.map((product, index) => (
+//                 <motion.div
+//                   key={index}
+//                   variants={fadeInUp}
+//                   whileHover={{ y: -8, scale: 1.05 }}
+//                   className="bg-[#1e293b] rounded-xl p-3 sm:p-4 md:p-6 text-center border border-[#06b6d4]/20 hover:border-[#fbbf24] transition-colors"
+//                 >
+//                   <motion.div
+//                     whileHover={{ rotate: 360 }}
+//                     transition={{ duration: 0.4 }}
+//                     className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 ${
+//                       index % 2 === 0 ? "bg-[#06b6d4]/10" : "bg-[#fbbf24]/10"
+//                     } rounded-lg flex items-center justify-center mx-auto mb-2 sm:mb-3 md:mb-4`}
+//                   >
+//                     <Cog
+//                       className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 ${
+//                         index % 2 === 0 ? "text-[#06b6d4]" : "text-[#fbbf24]"
+//                       }`}
+//                     />
+//                   </motion.div>
+//                   <div className="text-xs sm:text-sm md:text-base text-[#f1f5f9]">
+//                     {product}
+//                   </div>
+//                 </motion.div>
+//               ))}
+//             </motion.div>
+//           </div>
+//         </div>
+//       </SectionWrapper> */}
+//       <ProductsSection />
+
+//       {/* Footer */}
+//       <footer className="bg-[#0f172a]  border-t border-[#06b6d4]/25 overflow-hidden">
+//         {/* Animated accent bar */}
+//         <div className="h-[3px] bg-gradient-to-r from-[#06b6d4] via-[#fbbf24] to-[#06b6d4] bg-[length:200%_100%] animate-shimmer" />
+
+//         <div className="max-w- mx-auto px-4 sm:px-6 md:px-8 py-10">
+//           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+//             {/* Brand */}
+//             <div className="lg:col-span-1">
+//               <div className="flex items-center gap-3 mb-3">
+//                 <div className="w-10 h-10 bg-gradient-to-br from-[#06b6d4] to-[#fbbf24] rounded-lg flex items-center justify-center shrink-0">
+//                   {/* <Zap className="w-5 h-5 text-[#0f172a]" /> */}
+//                   <img
+//                     src="/logo1.jpg"
+//                     alt="Logo"
+//                     className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+//                   />
+//                 </div>
+//                 <div>
+//                   <p className="text-[#E5E7EB] text-base font-medium leading-tight">
+//                     AtomOne Technologies
+//                   </p>
+//                   <p className="text-[#E5E7EB] text-[10px] tracking-widest uppercase">
+//                     Precision Manufacturing
+//                   </p>
+//                 </div>
+//               </div>
+//               <p className="text-xs text-[#E5E7EB] leading-relaxed border-l-2 border-[#06b6d4] pl-3 mb-4">
+//                 AtomOne Technologies, formerly known as Minda Stampings, was
+//                 founded by Mr. Satish Goyal in 1996. We are a leading
+//                 engineering company specializing in sheet metal fabrication for
+//                 Automotive, Electrical, and Heavy Fabrication sectors globally.
+//                 Equipped with cutting-edge technology, our forward-thinking team
+//                 is committed to mutually beneficial relationships and absolute
+//                 customer satisfaction.
+//               </p>
+//               <div className="flex gap-2 flex-wrap">
+//                 {["ISO 9001", "CE Certified", "Since 2010"].map((b) => (
+//                   <span
+//                     key={b}
+//                     className="text-[10px] px-2 py-1 rounded border border-[#06b6d4]/40 text-[#E5E7EB] bg-[#06b6d4]/08 tracking-wide"
+//                   >
+//                     {b}
+//                   </span>
+//                 ))}
+//               </div>
+//             </div>
+
+//             {/* Contact */}
+//             <div>
+//               <h3 className="text-[11px] font-medium uppercase tracking-widest text-[#fbbf24] mb-4 flex items-center gap-2 after:flex-1 after:h-px after:bg-[#fbbf24]/20 after:content-['']">
+//                 Contact
+//               </h3>
+//               {[
+//                 {
+//                   icon: <Mail className="w-3.5 h-3.5" />,
+//                   text: "visheshgoyal@atomone.in",
+//                 },
+//                 {
+//                   icon: <Phone className="w-3.5 h-3.5" />,
+//                   text: "+91-9999761226",
+//                 },
+//                 {
+//                   icon: <Clock className="w-3.5 h-3.5" />,
+//                   text: "Mon–Sat, 9 AM–6 PM IST",
+//                 },
+//               ].map(({ icon, text }) => (
+//                 <div
+//                   key={text}
+//                   className="flex items-start gap-2 mb-3 text-[#E5E7EB] text-xs hover:text-[#e2e8f0] transition-colors group"
+//                 >
+//                   <div className="w-6 h-6 rounded-md bg-[#06b6d4]/10 border border-[#06b6d4]/20 flex items-center justify-center text-[#E5E7EB] shrink-0 mt-0.5">
+//                     {icon}
+//                   </div>
+//                   <span className="leading-relaxed">{text}</span>
+//                 </div>
+//               ))}
+//             </div>
+
+//             {/* Plants */}
+//             <div>
+//               <h3 className="text-[11px] font-medium uppercase tracking-widest text-[#fbbf24] mb-4 flex items-center gap-2 after:flex-1 after:h-px after:bg-[#fbbf24]/20 after:content-['']">
+//                 Plants
+//               </h3>
+//               {[
+//                 { name: "Gujarat Plant", sub: "Western India Operations" },
+//                 { name: "Haryana Plant", sub: "North India Operations" },
+//               ].map(({ name, sub }) => (
+//                 <div
+//                   key={name}
+//                   className="bg-white/[0.03] border border-white/[0.07] rounded-lg px-3 py-2.5 mb-2 hover:bg-[#06b6d4]/07 hover:border-[#06b6d4]/25 transition-all"
+//                 >
+//                   <p className="text-xs text-[#e2e8f0] font-medium flex items-center gap-1.5">
+//                     <span className="w-1.5 h-1.5 rounded-full bg-[#06b6d4] animate-pulse inline-block" />
+//                     {name}
+//                   </p>
+//                   <p className="text-[11px] text-[#E5E7EB] mt-0.5">{sub}</p>
+//                 </div>
+//               ))}
+//             </div>
+
+//             {/* Newsletter */}
+//             <div>
+//               <h3 className="text-[11px] font-medium uppercase tracking-widest text-[#fbbf24] mb-4 flex items-center gap-2 after:flex-1 after:h-px after:bg-[#fbbf24]/20 after:content-['']">
+//                 Stay Updated
+//               </h3>
+//               <p className="text-[11.5px] text-[#E5E7EB] leading-relaxed mb-3">
+//                 Capabilities updates, new equipment & industry insights.
+//               </p>
+//               <input
+//                 type="email"
+//                 placeholder="your@email.com"
+//                 className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-xs text-[#e2e8f0] placeholder-[#475569] outline-none focus:border-[#06b6d4]/50 mb-2"
+//               />
+//               <button className="w-full py-2 px-3 bg-[#06b6d4]/15 border border-[#06b6d4]/40 rounded-md text-[#06b6d4] text-xs font-medium uppercase tracking-wider hover:bg-[#06b6d4]/25 hover:border-[#06b6d4]/70 transition-all active:scale-[0.98]">
+//                 Subscribe
+//               </button>
+//             </div>
+//           </div>
+
+//           {/* Divider */}
+//           <div className="h-px bg-white/[0.06] mb-5" />
+
+//           {/* Bottom bar */}
+//           <div className="flex flex-wrap items-center justify-between gap-3">
+//             <p className="text-[11.5px] text-[#475569]">
+//               © 2025{" "}
+//               <span className="text-[#06b6d4]">AtomOne Technologies</span>. All
+//               rights reserved.
+//             </p>
+//             <div className="flex gap-4">
+//               {["Privacy Policy", "Quality Standards", "Careers"].map((l) => (
+//                 <a
+//                   key={l}
+//                   href="https://www.atomone.in/careers"
+//                   className="text-[11.5px] text-[#475569] hover:text-[#94a3b8] transition-colors"
+//                 >
+//                   {l}
+//                 </a>
+//               ))}
+//             </div>
+//             <div className="flex gap-2">
+//               {[
+//                 {
+//                   icon: <Linkedin className="w-3.5 h-3.5" />,
+//                   label: "LinkedIn",
+//                 },
+//                 { icon: <Twitter className="w-3.5 h-3.5" />, label: "Twitter" },
+//                 { icon: <Youtube className="w-3.5 h-3.5" />, label: "YouTube" },
+//               ].map(({ icon, label }) => (
+//                 <a
+//                   key={label}
+//                   href="https://in.linkedin.com/company/atomone-technologies"
+//                   aria-label={label}
+//                   className="w-7 h-7 rounded-md border border-white/10 bg-white/[0.04] flex items-center justify-center text-[#64748b] hover:bg-[#06b6d4]/12 hover:text-[#06b6d4] hover:border-[#06b6d4]/30 transition-all"
+//                 >
+//                   {icon}
+//                 </a>
+//               ))}
+//             </div>
+//           </div>
+//         </div>
+//       </footer>
+//     </div>
+//   );
+// }
+//end here
 import { useNavigate } from "react-router-dom";
 import {
   Factory,
@@ -17,6 +1166,8 @@ import {
   Cog,
   Menu,
   X,
+  Sun,
+  Moon,
 } from "lucide-react";
 import {
   BsPeopleFill,
@@ -25,16 +1176,113 @@ import {
 } from "react-icons/bs";
 import { Mail, Phone, Clock, Linkedin, Twitter, Youtube } from "lucide-react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import logo_head from "../logo_head.png";
 import TravelCarousel from "./TravelCarousel";
 import ValueCardsSection from "./ValueCardsSection";
 import ProductsSection from "./ProductsSection";
+
+/**
+ * THEME SYSTEM
+ * ---------------------------------------------------------------
+ * Two palettes:
+ *   - "light" -> Premium white + blue ONLY (per the reference screenshot)
+ *   - "dark"  -> The original AtomOne palette, untouched (navy bg,
+ *                cyan / gold / green accents) — dark mode is not
+ *                restyled, only light mode is.
+ *
+ * Every color in the page is driven by CSS variables set on the
+ * root wrapper via [data-theme]. Tailwind arbitrary-value classes
+ * like `bg-[var(--bg)]` read those variables, so toggling the
+ * `data-theme` attribute re-themes the entire page instantly with
+ * no duplicated markup and no re-render flash.
+ */
+const THEME_VARS = `
+  /* LIGHT — premium white + blue only (per instructor's spec) */
+  [data-theme="light"] {
+    --bg: #ffffff;
+    --bg-soft: #f8fafc;
+    --bg-soft-2: #eef4ff;
+    --surface: #ffffff;
+    --surface-2: #f5f9ff;
+    --text: #0f172a;
+    --text-soft: #5b6b82;
+    --text-muted: #8291a6;
+    --accent: #2563eb;
+    --accent-strong: #1d4ed8;
+    --accent-strong-alt: #1e40af;
+    --accent-soft: #60a5fa;
+    --accent-deep: #1e3a8a;
+    --card-1: #2563eb;
+    --card-2: #1d4ed8;
+    --card-3: #3b82f6;
+    --card-4: #1e3a8a;
+    --accent-tint: rgba(37, 99, 235, 0.08);
+    --accent-tint-strong: rgba(37, 99, 235, 0.14);
+    --border: rgba(37, 99, 235, 0.14);
+    --border-strong: rgba(37, 99, 235, 0.3);
+    --hero-from: #eff6ff;
+    --hero-via: #ffffff;
+    --hero-to: #ffffff;
+    --nav-bg: rgba(255, 255, 255, 0.85);
+    --shadow-color: rgba(30, 64, 175, 0.12);
+    --pill-text: #1d4ed8;
+    --success: #2563eb;
+    --btn-text: #ffffff;
+  }
+
+  /* DARK — original AtomOne palette, unchanged: navy bg, cyan + gold + green */
+  [data-theme="dark"] {
+    --bg: #0f172a;
+    --bg-soft: #1e293b;
+    --bg-soft-2: #172554;
+    --surface: #1e293b;
+    --surface-2: #172554;
+    --text: #f1f5f9;
+    --text-soft: #94a3b8;
+    --text-muted: #94a3b8;
+    --accent: #06b6d4;
+    --accent-strong: #fbbf24;
+    --accent-strong-alt: #f59e0b;
+    --accent-soft: #10b981;
+    --accent-deep: #a78bfa;
+    --card-1: #f97316;
+    --card-2: #38bdf8;
+    --card-3: #22c55e;
+    --card-4: #a78bfa;
+    --accent-tint: rgba(6, 182, 212, 0.1);
+    --accent-tint-strong: rgba(6, 182, 212, 0.18);
+    --border: rgba(6, 182, 212, 0.2);
+    --border-strong: rgba(6, 182, 212, 0.4);
+    --hero-from: #1e3a8a;
+    --hero-via: #1e293b;
+    --hero-to: #0f172a;
+    --nav-bg: rgba(15, 23, 42, 0);
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --pill-text: #06b6d4;
+    --success: #06b6d4;
+    --btn-text: #0f172a;
+  }
+`;
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const { scrollYProgress } = useScroll();
   const heroRef = useRef(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // ---- Theme state (persisted) ----
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "light";
+    return window.localStorage.getItem("atomone-theme") || "light";
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem("atomone-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () =>
+    setTheme((t) => (t === "light" ? "dark" : "light"));
 
   // Parallax and scroll effects
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0.3]);
@@ -42,48 +1290,46 @@ export default function LandingPage() {
   const heroY = useTransform(scrollYProgress, [0, 0.5], [0, 100]);
 
   const coreValues = [
-    { icon: Lightbulb, label: "Innovation", color: "cyan" },
-    { icon: Award, label: "Excellence", color: "yellow" },
-    { icon: Shield, label: "Integrity", color: "cyan" },
-    { icon: Eye, label: "Transparency", color: "yellow" },
-    { icon: CheckCircle, label: "Accountability", color: "cyan" },
-    { icon: Heart, label: "Social Responsibility", color: "yellow" },
+    { icon: Lightbulb, label: "Innovation" },
+    { icon: Award, label: "Excellence" },
+    { icon: Shield, label: "Integrity" },
+    { icon: Eye, label: "Transparency" },
+    { icon: CheckCircle, label: "Accountability" },
+    { icon: Heart, label: "Social Responsibility" },
   ];
 
   const technologies = [
-  {
-    icon: Camera,
-    title: "AI-Powered Visual Inspection",
-    description:
-      "Automated NG (Not Good) and OK part detection with AI camera system",
-    subtitle: "Real-time quality verification on every machine",
-    image: "./card1.png",
-  },
-  {
-    icon: Gauge,
-    title: "Real-Time Machine Intelligence",
-    description:
-      "Live monitoring: Shut Height, Tool ID, Machine Count",
-    subtitle: "Instant email alerts for any parameter changes",
-    image: "./card2.png",
-  },
-  {
-    icon: Database,
-    title: "Comprehensive Data Tracking",
-    description:
-      "Live counts: Machine-wise, Part-wise, Customer-wise",
-    subtitle: "Complete visibility from everywhere, anytime",
-    image: "./card3.png",
-  },
-  {
-    icon: Bell,
-    title: "Intelligent Alert System",
-    description:
-      "Automated email notifications for tool changes, height adjustments",
-    subtitle: "Proactive maintenance alerts",
-    image: "./card4.png",
-  },
-];
+    {
+      icon: Camera,
+      title: "AI-Powered Visual Inspection",
+      description:
+        "Automated NG (Not Good) and OK part detection with AI camera system",
+      subtitle: "Real-time quality verification on every machine",
+      image: "./card1.png",
+    },
+    {
+      icon: Gauge,
+      title: "Real-Time Machine Intelligence",
+      description: "Live monitoring: Shut Height, Tool ID, Machine Count",
+      subtitle: "Instant email alerts for any parameter changes",
+      image: "./card2.png",
+    },
+    {
+      icon: Database,
+      title: "Comprehensive Data Tracking",
+      description: "Live counts: Machine-wise, Part-wise, Customer-wise",
+      subtitle: "Complete visibility from everywhere, anytime",
+      image: "./card3.png",
+    },
+    {
+      icon: Bell,
+      title: "Intelligent Alert System",
+      description:
+        "Automated email notifications for tool changes, height adjustments",
+      subtitle: "Proactive maintenance alerts",
+      image: "./card4.png",
+    },
+  ];
 
   const teams = [
     { icon: Cpu, label: "IT & IoT Team" },
@@ -123,7 +1369,7 @@ export default function LandingPage() {
   const SectionWrapper = ({ children, delay = 0, className = "" }) => {
     const ref = useRef(null);
     const isInView = useInView(ref, {
-      once: false,
+      once: true,
       amount: 0.2,
       margin: "-100px 0px -100px 0px",
     });
@@ -143,14 +1389,19 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-[#f1f5f9] overflow-x-hidden">
+    <div
+      data-theme={theme}
+      className="min-h-screen bg-[var(--bg)] text-[var(--text)] overflow-x-hidden transition-colors duration-300"
+    >
+      <style>{THEME_VARS}</style>
+
       {/* Hero Section with Parallax */}
       <motion.div
         ref={heroRef}
         style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
-        className="relative bg-gradient-to-br from-[#1e3a8a] via-[#1e293b] to-[#0f172a] overflow-hidden min-h-screen"
+        className="relative bg-gradient-to-br from-[var(--hero-from)] via-[var(--hero-via)] to-[var(--hero-to)] overflow-hidden min-h-screen"
       >
-        {/* Animated Background with floating elements */}
+        {/* Ambient Background */}
         <div className="absolute inset-0">
           <motion.div
             animate={{
@@ -159,7 +1410,7 @@ export default function LandingPage() {
               scale: [1, 1.1, 0.9, 1],
             }}
             transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-20 left-10 w-48 md:w-72 h-48 md:h-72 bg-[#06b6d4] rounded-full mix-blend-multiply filter blur-xl opacity-30"
+            className="absolute top-20 left-10 w-48 md:w-72 h-48 md:h-72 bg-[var(--accent)] rounded-full mix-blend-multiply filter blur-3xl opacity-[0.12]"
           />
           <motion.div
             animate={{
@@ -173,7 +1424,7 @@ export default function LandingPage() {
               ease: "easeInOut",
               delay: 1,
             }}
-            className="absolute top-40 right-10 w-48 md:w-72 h-48 md:h-72 bg-[#fbbf24] rounded-full mix-blend-multiply filter blur-xl opacity-30"
+            className="absolute top-40 right-10 w-48 md:w-72 h-48 md:h-72 bg-[var(--accent-strong)] rounded-full mix-blend-multiply filter blur-3xl opacity-[0.10]"
           />
           <motion.div
             animate={{
@@ -187,19 +1438,19 @@ export default function LandingPage() {
               ease: "easeInOut",
               delay: 2,
             }}
-            className="absolute -bottom-8 left-1/2 w-48 md:w-72 h-48 md:h-72 bg-[#10b981] rounded-full mix-blend-multiply filter blur-xl opacity-30"
+            className="absolute -bottom-8 left-1/2 w-48 md:w-72 h-48 md:h-72 bg-[var(--accent-soft)] rounded-full mix-blend-multiply filter blur-3xl opacity-[0.10]"
           />
           <div
             className="absolute inset-0"
             style={{
               backgroundImage:
-                "repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(6, 182, 212, 0.03) 35px, rgba(6, 182, 212, 0.03) 70px), repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(251, 191, 36, 0.03) 35px, rgba(251, 191, 36, 0.03) 70px)",
+                "repeating-linear-gradient(45deg, transparent, transparent 35px, var(--accent-tint) 35px, var(--accent-tint) 70px), repeating-linear-gradient(-45deg, transparent, transparent 35px, var(--accent-tint) 35px, var(--accent-tint) 70px)",
             }}
           />
         </div>
 
-        {/* Navigation - Transparent with blur only */}
-        <nav className="relative z-10 flex items-center justify-between px-6 sm:px-8 md:px-12 py-4 md:py-5 ">
+        {/* Navigation */}
+        <nav className="relative z-10 flex items-center justify-between px-6 sm:px-8 md:px-12 py-4 md:py-5 bg-[var(--nav-bg)] backdrop-blur-xl border-b border-[var(--border)]">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -226,22 +1477,22 @@ export default function LandingPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#f1f5f9] to-[#94a3b8] text-transparent bg-clip-text tracking-tight"
+                className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-[var(--text)] to-[var(--accent-strong)] text-transparent bg-clip-text tracking-tight"
               >
                 AtomOne
               </motion.span>
             </div>
           </motion.div>
 
-          {/* Desktop Navigation - Enhanced Buttons */}
-          <div className="hidden sm:flex gap-4 md:gap-5">
+          {/* Desktop Navigation */}
+          <div className="hidden sm:flex items-center gap-3 md:gap-4">
             <motion.button
               variants={buttonHover}
               initial="rest"
               whileHover="hover"
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/login")}
-              className="px-6 md:px-8 py-2.5 md:py-3 text-sm md:text-base font-medium bg-transparent backdrop-blur-sm border-2 border-[#06b6d4] text-[#06b6d4] rounded-xl  transition-all duration-300 hover:shadow-lg hover:shadow-[#06b6d4]/50 hover:border-transparent"
+               className="px-6 md:px-8 py-2.5 md:py-3 text-sm md:text-base font-medium bg-gradient-to-r from-[var(--accent-strong)] to-[var(--accent-strong-alt)] text-[var(--btn-text)] rounded-xl hover:shadow-2xl hover:shadow-[var(--accent-strong)]/40 transition-all duration-300 hover:scale-105"
             >
               Login
             </motion.button>
@@ -251,32 +1502,60 @@ export default function LandingPage() {
               whileHover="hover"
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/signup")}
-              className="px-6 md:px-8 py-2.5 md:py-3 text-sm md:text-base font-medium bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-[#0f172a] rounded-xl hover:shadow-2xl hover:shadow-[#fbbf24]/50 transition-all duration-300 hover:scale-105"
+              className="px-6 md:px-8 py-2.5 md:py-3 text-sm md:text-base font-medium bg-gradient-to-r from-[var(--accent-strong)] to-[var(--accent-strong-alt)] text-[var(--btn-text)] rounded-xl hover:shadow-2xl hover:shadow-[var(--accent-strong)]/40 transition-all duration-300 hover:scale-105"
             >
               Sign Up
             </motion.button>
+
+            {/* Theme Toggle */}
+            <motion.button
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.92 }}
+              onClick={toggleTheme}
+              aria-label="Toggle light and dark theme"
+              className="relative w-11 h-11 flex items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--accent-tint)] text-[var(--accent)] hover:bg-[var(--accent-tint-strong)] transition-all duration-300"
+            >
+              {theme === "light" ? (
+                <Moon className="w-5 h-5" />
+              ) : (
+                <Sun className="w-5 h-5" />
+              )}
+            </motion.button>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="sm:hidden p-2.5 bg-[#06b6d4]/10 backdrop-blur-sm rounded-xl border border-[#06b6d4]/30 hover:bg-[#06b6d4]/20 transition-all duration-300"
-          >
-            {mobileMenuOpen ? (
-              <X className="w-5 h-5 text-[#06b6d4]" />
-            ) : (
-              <Menu className="w-5 h-5 text-[#06b6d4]" />
-            )}
-          </button>
+          {/* Mobile controls */}
+          <div className="sm:hidden flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle light and dark theme"
+              className="p-2.5 bg-[var(--accent-tint)] backdrop-blur-sm rounded-xl border border-[var(--border-strong)] text-[var(--accent)] hover:bg-[var(--accent-tint-strong)] transition-all duration-300"
+            >
+              {theme === "light" ? (
+                <Moon className="w-5 h-5" />
+              ) : (
+                <Sun className="w-5 h-5" />
+              )}
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2.5 bg-[var(--accent-tint)] backdrop-blur-sm rounded-xl border border-[var(--border-strong)] hover:bg-[var(--accent-tint-strong)] transition-all duration-300"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5 text-[var(--accent)]" />
+              ) : (
+                <Menu className="w-5 h-5 text-[var(--accent)]" />
+              )}
+            </button>
+          </div>
         </nav>
 
-        {/* Mobile Menu - Enhanced */}
+        {/* Mobile Menu */}
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-[72px] left-0 right-0 z-20 sm:hidden bg-[#0f172a]/95 backdrop-blur-xl border-b border-[#06b6d4]/30 p-5 shadow-xl"
+            className="absolute top-[72px] left-0 right-0 z-20 sm:hidden bg-[var(--surface)]/98 backdrop-blur-xl border-b border-[var(--border)] p-5 shadow-xl"
           >
             <div className="flex flex-col gap-3">
               <button
@@ -284,7 +1563,7 @@ export default function LandingPage() {
                   navigate("/login");
                   setMobileMenuOpen(false);
                 }}
-                className="w-full px-6 py-3 bg-[#06b6d4]/10 border-2 border-[#06b6d4] text-[#06b6d4] rounded-xl hover:bg-[#06b6d4] hover:text-[#0f172a] transition-all duration-300 font-medium"
+                className="w-full px-6 py-3 bg-[var(--accent-tint)] border-2 border-[var(--accent)] text-[var(--accent)] rounded-xl hover:bg-[var(--accent)] hover:text-white transition-all duration-300 font-medium"
               >
                 Login
               </button>
@@ -293,7 +1572,7 @@ export default function LandingPage() {
                   navigate("/signup");
                   setMobileMenuOpen(false);
                 }}
-                className="w-full px-6 py-3 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-[#0f172a] rounded-xl hover:shadow-2xl hover:shadow-[#fbbf24]/50 transition-all duration-300 font-medium"
+                className="w-full px-6 py-3 bg-gradient-to-r from-[var(--accent-strong)] to-[var(--accent-strong-alt)] text-[var(--btn-text)] rounded-xl hover:shadow-2xl hover:shadow-[var(--accent-strong)]/40 transition-all duration-300 font-medium"
               >
                 Sign Up
               </button>
@@ -302,7 +1581,7 @@ export default function LandingPage() {
         )}
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24 md:py-32 text-center">
-          {/* Badge Animation */}
+          {/* Badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
             animate={{ opacity: 1, scale: 1, rotate: 0 }}
@@ -311,7 +1590,7 @@ export default function LandingPage() {
           >
             <motion.span
               whileHover={{ scale: 1.05 }}
-              className="px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 text-xs sm:text-sm bg-[#06b6d4]/10 backdrop-blur-sm border border-[#06b6d4]/30 rounded-full text-[#06b6d4] inline-flex items-center gap-1 sm:gap-2"
+              className="px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 text-xs sm:text-sm bg-[var(--accent-tint)] backdrop-blur-sm border border-[var(--border-strong)] rounded-full text-[var(--pill-text)] inline-flex items-center gap-1 sm:gap-2 font-medium"
             >
               <motion.span className="inline-block text-sm sm:text-base">
                 🚀
@@ -323,9 +1602,9 @@ export default function LandingPage() {
             </motion.span>
           </motion.div>
 
-          {/* Main Heading - Responsive Text */}
+          {/* Main Heading */}
           <div className="mb-6 sm:mb-8">
-            <motion.h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl text-[#f1f5f9] tracking-tight leading-tight">
+            <motion.h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl text-[var(--text)] tracking-tight leading-tight font-bold">
               {["Where", "Technology", "Speaks", "Louder,"].map(
                 (word, index) => (
                   <motion.span
@@ -349,19 +1628,19 @@ export default function LandingPage() {
                 initial={{ opacity: 0, backgroundPosition: "0% 50%" }}
                 animate={{ opacity: 1, backgroundPosition: "100% 50%" }}
                 transition={{ duration: 1.2, delay: 0.9, ease: "easeOut" }}
-                className="bg-gradient-to-r from-[#06b6d4] via-[#fbbf24] to-[#10b981] text-transparent bg-clip-text bg-[length:200%_auto] inline-block text-2xl sm:text-4xl md:text-6xl lg:text-7xl"
+                className="bg-gradient-to-r from-[var(--accent)] via-[var(--accent-strong)] to-[var(--accent-soft)] text-transparent bg-clip-text bg-[length:200%_auto] inline-block text-2xl sm:text-4xl md:text-6xl lg:text-7xl"
               >
-                Every cut Delivers Perfection.
+                Every Cut Delivers Perfection.
               </motion.span>
             </motion.h1>
           </div>
 
-          {/* Subtitle - Responsive */}
+          {/* Subtitle */}
           <motion.p
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 1.2 }}
-            className="text-base sm:text-xl md:text-2xl lg:text-3xl text-[#94a3b8] mb-8 sm:mb-12 md:mb-16 px-4"
+            className="text-base sm:text-xl md:text-2xl lg:text-3xl text-[var(--text-soft)] mb-8 sm:mb-12 md:mb-16 px-4"
           >
             <motion.span
               initial={{ width: 0 }}
@@ -373,7 +1652,7 @@ export default function LandingPage() {
             </motion.span>
           </motion.p>
 
-          {/* Statistics Bar - Responsive Grid */}
+          {/* Statistics Bar */}
           <motion.div
             variants={staggerContainer}
             initial="hidden"
@@ -381,80 +1660,37 @@ export default function LandingPage() {
             className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 mt-12 sm:mt-16 md:mt-20"
           >
             {[
-              {
-                icon: BsPeopleFill,
-                value: "400+",
-                label: "Employees",
-                color: "cyan",
-                delay: 1.6,
-              },
-              {
-                icon: BsBuilding,
-                value: "3",
-                label: "Units",
-                color: "yellow",
-                delay: 1.7,
-              },
-              {
-                icon: BsGearFill,
-                value: "150+",
-                label: "Presses",
-                color: "green",
-                delay: 1.8,
-              },
+              { icon: BsPeopleFill, value: "400+", label: "Employees", delay: 1.6, color: "var(--accent)" },
+              { icon: BsBuilding, value: "3", label: "Units", delay: 1.7, color: "var(--accent-strong)" },
+              { icon: BsGearFill, value: "150+", label: "Presses", delay: 1.8, color: "var(--accent-soft)" },
             ].map((stat, idx) => {
               const Icon = stat.icon;
-              const borderColor =
-                stat.color === "cyan"
-                  ? "border-[#06b6d4]/30 hover:border-[#06b6d4]"
-                  : stat.color === "yellow"
-                  ? "border-[#fbbf24]/30 hover:border-[#fbbf24]"
-                  : "border-[#10b981]/30 hover:border-[#10b981]";
-              const shadowColor =
-                stat.color === "cyan"
-                  ? "shadow-[#06b6d4]/20"
-                  : stat.color === "yellow"
-                  ? "shadow-[#fbbf24]/20"
-                  : "shadow-[#10b981]/20";
-              const iconColor =
-                stat.color === "cyan"
-                  ? "text-[#06b6d4]"
-                  : stat.color === "yellow"
-                  ? "text-[#fbbf24]"
-                  : "text-[#10b981]";
-              const bgHover =
-                stat.color === "cyan"
-                  ? "group-hover:bg-[#06b6d4]/20"
-                  : stat.color === "yellow"
-                  ? "group-hover:bg-[#fbbf24]/20"
-                  : "group-hover:bg-[#10b981]/20";
               return (
                 <motion.div
                   key={idx}
                   variants={fadeInUp}
                   whileHover={{ scale: 1.05, y: -5 }}
                   transition={{ delay: stat.delay }}
-                  className={`group flex items-center gap-2 sm:gap-4 bg-gradient-to-br from-[#1e293b]/80 to-[#1e293b]/40 backdrop-blur-xl px-4 sm:px-6 md:px-8 py-3 sm:py-5 md:py-6 rounded-xl sm:rounded-2xl border ${borderColor} transition-all duration-300  ${shadowColor}`}
+                  style={{ "--stat-color": stat.color }}
+                  className="group flex items-center gap-2 sm:gap-4 bg-[var(--surface)] backdrop-blur-xl px-4 sm:px-6 md:px-8 py-3 sm:py-5 md:py-6 rounded-xl sm:rounded-2xl border border-[var(--border)] hover:border-[var(--stat-color)] shadow-[0_8px_30px_var(--shadow-color)] transition-all duration-300"
                 >
                   <motion.div
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.5 }}
-                    className={`p-2 sm:p-3 bg-[#06b6d4]/10 rounded-lg sm:rounded-xl ${bgHover} transition-all duration-300`}
+                    className="p-2 sm:p-3 bg-[var(--accent-tint)] rounded-lg sm:rounded-xl group-hover:bg-[var(--accent-tint-strong)] transition-all duration-300"
                   >
-                    <Icon
-                      className={`w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 ${iconColor}`}
-                    />
+                    <Icon className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" style={{ color: stat.color }} />
                   </motion.div>
                   <div className="text-left">
                     <motion.div
                       initial={{ opacity: 0, scale: 0.5 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.5, delay: stat.delay + 0.2 }}
-                      className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-[#f1f5f9] mb-0.5 sm:mb-1"
+                      className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-[var(--text)] mb-0.5 sm:mb-1 font-bold"
                     >
                       {stat.value}
                     </motion.div>
-                    <div className="text-xs sm:text-sm text-[#94a3b8]">
+                    <div className="text-xs sm:text-sm text-[var(--text-soft)]">
                       {stat.label}
                     </div>
                   </div>
@@ -472,34 +1708,31 @@ export default function LandingPage() {
               window.scrollTo({ top: window.innerHeight, behavior: "smooth" })
             }
           >
-            <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 border-[#06b6d4] rounded-full flex justify-center">
+            <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 border-[var(--accent)] rounded-full flex justify-center">
               <motion.div
                 animate={{ y: [0, 12, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
-                className="w-1 h-2 sm:h-3 bg-[#06b6d4] rounded-full mt-2"
+                className="w-1 h-2 sm:h-3 bg-[var(--accent)] rounded-full mt-2"
               />
             </div>
           </motion.div>
         </div>
       </motion.div>
-
-      {/* Rest of your sections remain the same... */}
-      {/* Vision Section (UPAR) */}
-
-      <ValueCardsSection />
-
-      {/* Mission Section (NICHE) */}
+      <div className="w-full">
+         <ValueCardsSection theme={theme} />
+      </div>
+     
 
       {/* Core Values */}
       <SectionWrapper>
-        <div className="relative bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] py-12 sm:py-16">
+        <div className="relative bg-gradient-to-b from-[var(--bg)] via-[var(--bg-soft)] to-[var(--bg)] py-12 sm:py-16">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-8">
             <motion.h2
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              viewport={{ once: false, amount: 0.3 }}
-              className="text-2xl sm:text-3xl md:text-4xl mb-8 sm:mb-12 text-center text-[#f1f5f9]"
+              viewport={{ once: true, amount: 0.3 }}
+              className="text-2xl sm:text-3xl md:text-4xl mb-8 sm:mb-12 text-center text-[var(--text)] font-bold"
             >
               Core Values
             </motion.h2>
@@ -507,15 +1740,13 @@ export default function LandingPage() {
               variants={staggerContainer}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: false, amount: 0.2 }}
+              viewport={{ once: true, amount: 0.2 }}
               className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-6"
             >
               {coreValues.map((value, index) => {
                 const Icon = value.icon;
-                const colorClass =
-                  value.color === "cyan"
-                    ? "text-[#06b6d4] bg-[#06b6d4]/10"
-                    : "text-[#fbbf24] bg-[#fbbf24]/10";
+                const valueColor =
+                  index % 2 === 0 ? "var(--accent)" : "var(--accent-strong)";
                 return (
                   <motion.div
                     key={index}
@@ -526,11 +1757,12 @@ export default function LandingPage() {
                     <motion.div
                       whileHover={{ rotate: 360 }}
                       transition={{ duration: 0.4 }}
-                      className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 ${colorClass} rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-4`}
+                      style={{ color: valueColor }}
+                      className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-[var(--accent-tint)] rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-4"
                     >
                       <Icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
                     </motion.div>
-                    <div className="text-xs sm:text-sm md:text-base text-[#f1f5f9]">
+                    <div className="text-xs sm:text-sm md:text-base text-[var(--text)]">
                       {value.label}
                     </div>
                   </motion.div>
@@ -543,17 +1775,17 @@ export default function LandingPage() {
 
       {/* Advanced Technology Section */}
       <SectionWrapper>
-        <div className="relative bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] py-16 sm:py-20 md:py-24 overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
+        <div className="relative bg-gradient-to-b from-[var(--bg)] via-[var(--bg-soft)] to-[var(--bg)] py-16 sm:py-20 md:py-24 overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.06]">
             <motion.div
               animate={{ x: [0, 50, -30, 0], y: [0, -30, 20, 0] }}
               transition={{ duration: 20, repeat: Infinity }}
-              className="absolute top-1/4 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-[#06b6d4] rounded-full filter blur-3xl"
+              className="absolute top-1/4 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-[var(--accent)] rounded-full filter blur-3xl"
             />
             <motion.div
               animate={{ x: [0, -40, 30, 0], y: [0, 40, -20, 0] }}
               transition={{ duration: 18, repeat: Infinity, delay: 1 }}
-              className="absolute bottom-1/4 right-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-[#fbbf24] rounded-full filter blur-3xl"
+              className="absolute bottom-1/4 right-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-[var(--accent-strong)] rounded-full filter blur-3xl"
             />
           </div>
 
@@ -562,164 +1794,101 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              viewport={{ once: false, amount: 0.3 }}
+              viewport={{ once: true, amount: 0.3 }}
               className="text-center mb-8 sm:mb-12 md:mb-16"
             >
               <div className="inline-block mb-4 sm:mb-6">
-                <span className="px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm bg-gradient-to-r from-[#06b6d4]/20 to-[#fbbf24]/20 backdrop-blur-sm border border-[#06b6d4]/30 rounded-full text-[#06b6d4]">
+                <span className="px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm bg-[var(--accent-tint)] backdrop-blur-sm border border-[var(--border-strong)] rounded-full text-[var(--pill-text)] font-medium">
                   ⚡ Powered by AI & IoT
                 </span>
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-4 sm:mb-6 text-[#f1f5f9] px-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-4 sm:mb-6 text-[var(--text)] px-4 font-bold">
                 Industry 4.0 Smart Factory
               </h2>
-              <p className="text-lg sm:text-xl md:text-2xl bg-gradient-to-r from-[#06b6d4] to-[#fbbf24] text-transparent bg-clip-text">
+              <p className="text-lg sm:text-xl md:text-2xl bg-gradient-to-r from-[var(--accent)] to-[var(--accent-strong)] text-transparent bg-clip-text font-semibold">
                 Advanced Monitoring System
               </p>
             </motion.div>
 
-            {/* <motion.div
+            <motion.div
               variants={staggerContainer}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: false, amount: 0.1 }}
+              viewport={{ once: true, amount: 0.1 }}
               className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8"
             >
               {technologies.map((tech, index) => {
                 const Icon = tech.icon;
+
                 return (
                   <motion.div
                     key={index}
                     variants={fadeInUp}
-                    whileHover="hover"
-                    className="group relative bg-gradient-to-br from-[#1e293b]/80 to-[#1e293b]/40 backdrop-blur-xl rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 border border-[#06b6d4]/20 hover:border-[#06b6d4] transition-all duration-500 hover:shadow-2xl hover:shadow-[#06b6d4]/20"
+                    whileHover={{ y: -6, scale: 1.01 }}
+                    className="group relative overflow-hidden bg-[var(--surface)] backdrop-blur-xl rounded-2xl p-6 border border-[var(--border)] hover:border-[var(--border-strong)] shadow-[0_8px_30px_var(--shadow-color)] transition-all duration-500"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#06b6d4]/0 to-[#06b6d4]/5 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="relative flex flex-col sm:flex-row items-start gap-3 sm:gap-5">
-                      <motion.div
-                        whileHover={{ rotate: 10, scale: 1.1 }}
-                        className="p-3 sm:p-4 bg-gradient-to-br from-[#06b6d4]/20 to-[#06b6d4]/5 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#06b6d4]/20"
-                      >
-                        <Icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-[#06b6d4]" />
-                      </motion.div>
-                      <div>
-                        <h3 className="text-lg sm:text-xl md:text-2xl mb-2 sm:mb-3 text-[#f1f5f9] group-hover:text-[#06b6d4] transition-colors duration-300">
-                          {tech.title}
-                        </h3>
-                        <p className="text-sm sm:text-base text-[#94a3b8] mb-2 sm:mb-3 leading-relaxed">
-                          {tech.description}
-                        </p>
-                        <p className="text-xs sm:text-sm text-[#06b6d4] flex items-center gap-2">
-                          <motion.span
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ duration: 1, repeat: Infinity }}
-                            className="w-1.5 h-1.5 bg-[#06b6d4] rounded-full"
-                          />
-                          {tech.subtitle}
-                        </p>
+                    <div className="absolute inset-0 bg-gradient-to-r from-[var(--accent)]/0 via-[var(--accent)]/5 to-[var(--accent)]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                    <div className="relative flex flex-col lg:flex-row items-center gap-6">
+                      <div className="flex-1 w-full">
+                        <div className="flex items-start gap-4">
+                          <motion.div
+                            whileHover={{ rotate: 10, scale: 1.1 }}
+                            className="p-4 bg-[var(--accent-tint)] rounded-xl flex items-center justify-center flex-shrink-0"
+                          >
+                            <Icon className="w-8 h-8 text-[var(--accent)]" />
+                          </motion.div>
+
+                          <div>
+                            <h3 className="text-xl lg:text-2xl font-semibold text-[var(--text)] group-hover:text-[var(--accent)] transition-colors duration-300 mb-2">
+                              {tech.title}
+                            </h3>
+
+                            <p className="text-[var(--text-soft)] leading-relaxed mb-3">
+                              {tech.description}
+                            </p>
+
+                            <p className="text-sm text-[var(--accent)] flex items-center gap-2">
+                              <motion.span
+                                animate={{ scale: [1, 1.3, 1] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                                className="w-2 h-2 rounded-full bg-[var(--accent)]"
+                              />
+                              {tech.subtitle}
+                            </p>
+                          </div>
+                        </div>
                       </div>
+
+                      {/* <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        className="hidden lg:block w-[240px] h-[150px] flex-shrink-0 overflow-hidden rounded-xl border border-[var(--border)]"
+                      >
+                        <img
+                          src={tech.image}
+                          alt={tech.title}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      </motion.div> */}
                     </div>
                   </motion.div>
                 );
               })}
-            </motion.div> */}
-            <motion.div
-  variants={staggerContainer}
-  initial="hidden"
-  whileInView="visible"
-  viewport={{ once: false, amount: 0.1 }}
-  className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8"
->
-  {technologies.map((tech, index) => {
-    const Icon = tech.icon;
-
-    return (
-      <motion.div
-        key={index}
-        variants={fadeInUp}
-        whileHover={{
-          y: -6,
-          scale: 1.01,
-        }}
-        className="group relative overflow-hidden bg-gradient-to-br from-[#1e293b]/80 to-[#0f172a]/80 backdrop-blur-xl rounded-2xl p-6 border border-[#06b6d4]/20 hover:border-[#06b6d4]/60 transition-all duration-500"
-      >
-        {/* Hover Glow */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#06b6d4]/0 via-[#06b6d4]/5 to-[#06b6d4]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-        <div className="relative flex flex-col lg:flex-row items-center gap-6">
-          
-          {/* Left Content */}
-          <div className="flex-1 w-full">
-            <div className="flex items-start gap-4">
-              
-              <motion.div
-                whileHover={{
-                  rotate: 10,
-                  scale: 1.1,
-                }}
-                className="p-4 bg-gradient-to-br from-[#06b6d4]/20 to-[#06b6d4]/5 rounded-xl flex items-center justify-center flex-shrink-0 "
-              >
-                <Icon className="w-8 h-8 text-[#06b6d4]" />
-              </motion.div>
-
-              <div>
-                <h3 className="text-xl lg:text-2xl font-semibold text-[#f1f5f9] group-hover:text-[#06b6d4] transition-colors duration-300 mb-2">
-                  {tech.title}
-                </h3>
-
-                <p className="text-[#94a3b8] leading-relaxed mb-3">
-                  {tech.description}
-                </p>
-
-                <p className="text-sm text-[#06b6d4] flex items-center gap-2">
-                  <motion.span
-                    animate={{
-                      scale: [1, 1.3, 1],
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                    }}
-                    className="w-2 h-2 rounded-full bg-[#06b6d4]"
-                  />
-                  {tech.subtitle}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Image */}
-          <motion.div
-            whileHover={{
-              scale: 1.05,
-            }}
-            className="hidden lg:block w-[240px] h-[150px] flex-shrink-0 overflow-hidden rounded-xl border border-[#06b6d4]/20"
-          >
-            <img
-              src={tech.image}
-              alt={tech.title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-          </motion.div>
-        </div>
-      </motion.div>
-    );
-  })}
-</motion.div>
+            </motion.div>
           </div>
         </div>
       </SectionWrapper>
 
       {/* Team Excellence */}
       <SectionWrapper>
-        <div className="relative bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] py-12 sm:py-16">
+        <div className="relative bg-gradient-to-b from-[var(--bg)] via-[var(--bg-soft)] to-[var(--bg)] py-12 sm:py-16">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-8">
             <motion.h2
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              viewport={{ once: false, amount: 0.3 }}
-              className="text-2xl sm:text-3xl md:text-4xl mb-8 sm:mb-12 text-center text-[#f1f5f9]"
+              viewport={{ once: true, amount: 0.3 }}
+              className="text-2xl sm:text-3xl md:text-4xl mb-8 sm:mb-12 text-center text-[var(--text)] font-bold"
             >
               Our Expert Teams
             </motion.h2>
@@ -727,7 +1896,7 @@ export default function LandingPage() {
               variants={staggerContainer}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: false, amount: 0.2 }}
+              viewport={{ once: true, amount: 0.2 }}
               className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6"
             >
               {teams.map((team, index) => {
@@ -737,16 +1906,16 @@ export default function LandingPage() {
                     key={index}
                     variants={fadeInUp}
                     whileHover={{ y: -8, scale: 1.05 }}
-                    className="bg-[#1e293b] rounded-xl p-4 sm:p-5 md:p-6 text-center border border-[#06b6d4]/20 hover:border-[#fbbf24] transition-colors"
+                    className="bg-[var(--surface)] rounded-xl p-4 sm:p-5 md:p-6 text-center border border-[var(--border)] hover:border-[var(--accent-strong)] shadow-[0_8px_30px_var(--shadow-color)] transition-colors"
                   >
                     <motion.div
                       whileHover={{ rotate: 360 }}
                       transition={{ duration: 0.5 }}
-                      className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-[#06b6d4]/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 md:mb-4"
+                      className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-[var(--accent-tint)] rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 md:mb-4"
                     >
-                      <Icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-[#06b6d4]" />
+                      <Icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-[var(--accent)]" />
                     </motion.div>
-                    <div className="text-xs sm:text-sm md:text-base text-[#f1f5f9]">
+                    <div className="text-xs sm:text-sm md:text-base text-[var(--text)]">
                       {team.label}
                     </div>
                   </motion.div>
@@ -757,168 +1926,82 @@ export default function LandingPage() {
         </div>
       </SectionWrapper>
 
-      {/* <TravelCarousel /> */}
-
       {/* Digital Impact */}
-
       <SectionWrapper>
-        <div className="relative bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] py-10 lg:py-14 mt-0 overflow-hidden">
-          {/* Ambient Glow */}
+        <div className="relative bg-gradient-to-b from-[var(--bg)] via-[var(--bg-soft)] to-[var(--bg)] py-10 lg:py-14 mt-0 overflow-hidden">
           <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              rotate: [0, 180, 360],
-            }}
-            transition={{
-              duration: 20,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-[#fbbf24]/5 blur-3xl pointer-events-none"
+            animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-[var(--accent)]/[0.04] blur-3xl pointer-events-none"
           />
 
           <div className="max-w-auto mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.2 }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.7 }}
-              className="
-          relative
-          overflow-hidden
-          rounded-[32px]
-          border
-          border-[#fbbf24]/30
-          bg-gradient-to-r
-          from-[#172554]
-          via-[#1e293b]
-          to-[#172554]
-          backdrop-blur-xl
-          px-6
-          sm:px-10
-          lg:px-14
-          py-6
-          lg:py-8
-          shadow-[0_20px_80px_rgba(0,0,0,0.35)]
-        "
+              className="relative overflow-hidden rounded-[32px] border border-[var(--accent-strong)]/30 bg-[var(--surface-2)] backdrop-blur-xl px-6 sm:px-10 lg:px-14 py-6 lg:py-8 shadow-[0_20px_80px_var(--shadow-color)]"
             >
-              {/* Top Accent Line */}
-              <div className="absolute top-0 left-0 h-[3px] w-full bg-gradient-to-r from-transparent via-[#fbbf24] to-transparent" />
+              <div className="absolute top-0 left-0 h-[3px] w-full bg-gradient-to-r from-transparent via-[var(--accent-strong)] to-transparent" />
 
-              {/* Grid Overlay */}
               <div
                 className="absolute inset-0 opacity-[0.04]"
                 style={{
                   backgroundImage: `
-              linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)
+              linear-gradient(var(--text) 1px, transparent 1px),
+              linear-gradient(90deg, var(--text) 1px, transparent 1px)
             `,
                   backgroundSize: "50px 50px",
                 }}
               />
 
               <div className="relative z-10">
-                {/* Header */}
                 <div className="text-center mb-6 lg:mb-8">
-                  <div className="uppercase tracking-[0.35em] text-xs text-[#fbbf24]/80 mb-4">
+                  <div className="uppercase tracking-[0.35em] text-xs text-[var(--accent-strong)] mb-4">
                     Industry 4.0 Performance Metrics
                   </div>
 
-                  <h2
-                    className="
-                text-3xl
-                md:text-4xl
-                lg:text-5xl
-                font-bold
-                bg-gradient-to-r
-                from-[#fbbf24]
-                via-[#fde68a]
-                to-[#fbbf24]
-                bg-clip-text
-                text-transparent
-                mb-4
-              "
-                  >
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-[var(--accent-strong)] via-[var(--accent-strong-alt)] to-[var(--accent-strong)] bg-clip-text text-transparent mb-4">
                     Digital Transformation Impact
                   </h2>
 
-                  <p className="text-slate-400 text-base lg:text-lg max-w-3xl mx-auto">
+                  <p className="text-[var(--text-soft)] text-base lg:text-lg max-w-3xl mx-auto">
                     Measurable results achieved through smart manufacturing,
                     automation, real-time visibility, and continuous
                     improvement.
                   </p>
                 </div>
 
-                {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4">
                   {[
-                    {
-                      value: "15-20%",
-                      label: "Machine Utilization",
-                      sub: "Increment",
-                    },
-                    {
-                      value: "8-12%",
-                      label: "Operator Efficiency",
-                      sub: "Increase",
-                    },
-                    {
-                      value: "10-15%",
-                      label: "Quality Improvement",
-                      sub: "Reduction in Defects",
-                    },
-                    {
-                      value: "24/7",
-                      label: "Real-Time Data",
-                      sub: "Visibility",
-                    },
+                    { value: "15-20%", label: "Machine Utilization", sub: "Increment" },
+                    { value: "8-12%", label: "Operator Efficiency", sub: "Increase" },
+                    { value: "10-15%", label: "Quality Improvement", sub: "Reduction in Defects" },
+                    { value: "24/7", label: "Real-Time Data", sub: "Visibility" },
                   ].map((stat, idx) => (
                     <motion.div
                       key={idx}
-                      whileHover={{
-                        y: -8,
-                        scale: 1.03,
-                      }}
+                      whileHover={{ y: -8, scale: 1.03 }}
                       transition={{ duration: 0.25 }}
-                      className={`
-                  relative
-                  text-center
-                  px-4
-                  py-3
-                  ${idx !== 3 ? "lg:border-r lg:border-white/10" : ""}
-                `}
+                      className={`relative text-center px-4 py-3 ${
+                        idx !== 3 ? "lg:border-r lg:border-[var(--border)]" : ""
+                      }`}
                     >
-                      {/* Glow */}
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full" />
+                        <div className="w-32 h-32 bg-[var(--accent-soft)]/10 blur-3xl rounded-full" />
                       </div>
 
                       <div className="relative">
-                        <div
-                          className="
-                      whitespace-nowrap
-                      text-4xl
-                      sm:text-5xl
-                      lg:text-6xl
-                      xl:text-7xl
-                      font-bold
-                      bg-gradient-to-br
-                      from-emerald-300
-                      via-emerald-400
-                      to-emerald-500
-                      bg-clip-text
-                      text-transparent
-                      mb-3
-                    "
-                        >
+                        <div className="whitespace-nowrap text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold bg-gradient-to-br from-[var(--accent-soft)] to-[var(--accent-soft)] bg-clip-text text-transparent mb-3">
                           {stat.value}
                         </div>
 
-                        <h3 className="text-white text-base lg:text-lg font-semibold mb-1">
+                        <h3 className="text-[var(--text)] text-base lg:text-lg font-semibold mb-1">
                           {stat.label}
                         </h3>
 
-                        <p className="text-slate-400 text-sm">{stat.sub}</p>
+                        <p className="text-[var(--text-soft)] text-sm">{stat.sub}</p>
                       </div>
                     </motion.div>
                   ))}
@@ -929,69 +2012,18 @@ export default function LandingPage() {
         </div>
       </SectionWrapper>
 
-      {/* Products Showcase */}
-      {/* <SectionWrapper>
-        <div className="relative bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] py-12 sm:py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-            <motion.h2
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: false, amount: 0.3 }}
-              className="text-2xl sm:text-3xl md:text-4xl mb-8 sm:mb-12 text-center text-[#f1f5f9]"
-            >
-              Our Products
-            </motion.h2>
-            <motion.div
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: false, amount: 0.2 }}
-              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6"
-            >
-              {products.map((product, index) => (
-                <motion.div
-                  key={index}
-                  variants={fadeInUp}
-                  whileHover={{ y: -8, scale: 1.05 }}
-                  className="bg-[#1e293b] rounded-xl p-3 sm:p-4 md:p-6 text-center border border-[#06b6d4]/20 hover:border-[#fbbf24] transition-colors"
-                >
-                  <motion.div
-                    whileHover={{ rotate: 360 }}
-                    transition={{ duration: 0.4 }}
-                    className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 ${
-                      index % 2 === 0 ? "bg-[#06b6d4]/10" : "bg-[#fbbf24]/10"
-                    } rounded-lg flex items-center justify-center mx-auto mb-2 sm:mb-3 md:mb-4`}
-                  >
-                    <Cog
-                      className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 ${
-                        index % 2 === 0 ? "text-[#06b6d4]" : "text-[#fbbf24]"
-                      }`}
-                    />
-                  </motion.div>
-                  <div className="text-xs sm:text-sm md:text-base text-[#f1f5f9]">
-                    {product}
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </div>
-      </SectionWrapper> */}
-      <ProductsSection />
+      <ProductsSection theme={theme} />
 
       {/* Footer */}
-      <footer className="bg-[#0f172a]  border-t border-[#06b6d4]/25 overflow-hidden">
-        {/* Animated accent bar */}
-        <div className="h-[3px] bg-gradient-to-r from-[#06b6d4] via-[#fbbf24] to-[#06b6d4] bg-[length:200%_100%] animate-shimmer" />
+      <footer className="bg-[var(--bg)] border-t border-[var(--border)] overflow-hidden">
+        <div className="h-[3px] bg-gradient-to-r from-[var(--accent)] via-[var(--accent-soft)] to-[var(--accent)] bg-[length:200%_100%] animate-shimmer" />
 
-        <div className="max-w- mx-auto px-4 sm:px-6 md:px-8 py-10">
+        <div className="w-full px-4 sm:px-6 md:px-8 py-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
             {/* Brand */}
             <div className="lg:col-span-1">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#06b6d4] to-[#fbbf24] rounded-lg flex items-center justify-center shrink-0">
-                  {/* <Zap className="w-5 h-5 text-[#0f172a]" /> */}
+                <div className="w-10 h-10 bg-gradient-to-br from-[var(--accent)] to-[var(--accent-strong)] rounded-lg flex items-center justify-center shrink-0">
                   <img
                     src="/logo1.jpg"
                     alt="Logo"
@@ -999,15 +2031,15 @@ export default function LandingPage() {
                   />
                 </div>
                 <div>
-                  <p className="text-[#E5E7EB] text-base font-medium leading-tight">
+                  <p className="text-[var(--text)] text-base font-medium leading-tight">
                     AtomOne Technologies
                   </p>
-                  <p className="text-[#E5E7EB] text-[10px] tracking-widest uppercase">
+                  <p className="text-[var(--text-muted)] text-[10px] tracking-widest uppercase">
                     Precision Manufacturing
                   </p>
                 </div>
               </div>
-              <p className="text-xs text-[#E5E7EB] leading-relaxed border-l-2 border-[#06b6d4] pl-3 mb-4">
+              <p className="text-xs text-[var(--text-soft)] leading-relaxed border-l-2 border-[var(--accent)] pl-3 mb-4">
                 AtomOne Technologies, formerly known as Minda Stampings, was
                 founded by Mr. Satish Goyal in 1996. We are a leading
                 engineering company specializing in sheet metal fabrication for
@@ -1020,7 +2052,7 @@ export default function LandingPage() {
                 {["ISO 9001", "CE Certified", "Since 2010"].map((b) => (
                   <span
                     key={b}
-                    className="text-[10px] px-2 py-1 rounded border border-[#06b6d4]/40 text-[#E5E7EB] bg-[#06b6d4]/08 tracking-wide"
+                    className="text-[10px] px-2 py-1 rounded border border-[var(--border-strong)] text-[var(--pill-text)] bg-[var(--accent-tint)] tracking-wide"
                   >
                     {b}
                   </span>
@@ -1030,28 +2062,19 @@ export default function LandingPage() {
 
             {/* Contact */}
             <div>
-              <h3 className="text-[11px] font-medium uppercase tracking-widest text-[#fbbf24] mb-4 flex items-center gap-2 after:flex-1 after:h-px after:bg-[#fbbf24]/20 after:content-['']">
+              <h3 className="text-[11px] font-medium uppercase tracking-widest text-[var(--accent-strong)] mb-4 flex items-center gap-2 after:flex-1 after:h-px after:bg-[var(--border-strong)] after:content-['']">
                 Contact
               </h3>
               {[
-                {
-                  icon: <Mail className="w-3.5 h-3.5" />,
-                  text: "visheshgoyal@atomone.in",
-                },
-                {
-                  icon: <Phone className="w-3.5 h-3.5" />,
-                  text: "+91-9999761226",
-                },
-                {
-                  icon: <Clock className="w-3.5 h-3.5" />,
-                  text: "Mon–Sat, 9 AM–6 PM IST",
-                },
+                { icon: <Mail className="w-3.5 h-3.5" />, text: "visheshgoyal@atomone.in" },
+                { icon: <Phone className="w-3.5 h-3.5" />, text: "+91-9999761226" },
+                { icon: <Clock className="w-3.5 h-3.5" />, text: "Mon–Sat, 9 AM–6 PM IST" },
               ].map(({ icon, text }) => (
                 <div
                   key={text}
-                  className="flex items-start gap-2 mb-3 text-[#E5E7EB] text-xs hover:text-[#e2e8f0] transition-colors group"
+                  className="flex items-start gap-2 mb-3 text-[var(--text-soft)] text-xs hover:text-[var(--text)] transition-colors group"
                 >
-                  <div className="w-6 h-6 rounded-md bg-[#06b6d4]/10 border border-[#06b6d4]/20 flex items-center justify-center text-[#E5E7EB] shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-md bg-[var(--accent-tint)] border border-[var(--border)] flex items-center justify-center text-[var(--accent)] shrink-0 mt-0.5">
                     {icon}
                   </div>
                   <span className="leading-relaxed">{text}</span>
@@ -1061,7 +2084,7 @@ export default function LandingPage() {
 
             {/* Plants */}
             <div>
-              <h3 className="text-[11px] font-medium uppercase tracking-widest text-[#fbbf24] mb-4 flex items-center gap-2 after:flex-1 after:h-px after:bg-[#fbbf24]/20 after:content-['']">
+              <h3 className="text-[11px] font-medium uppercase tracking-widest text-[var(--accent-strong)] mb-4 flex items-center gap-2 after:flex-1 after:h-px after:bg-[var(--border-strong)] after:content-['']">
                 Plants
               </h3>
               {[
@@ -1070,44 +2093,42 @@ export default function LandingPage() {
               ].map(({ name, sub }) => (
                 <div
                   key={name}
-                  className="bg-white/[0.03] border border-white/[0.07] rounded-lg px-3 py-2.5 mb-2 hover:bg-[#06b6d4]/07 hover:border-[#06b6d4]/25 transition-all"
+                  className="bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-2.5 mb-2 hover:border-[var(--border-strong)] transition-all"
                 >
-                  <p className="text-xs text-[#e2e8f0] font-medium flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#06b6d4] animate-pulse inline-block" />
+                  <p className="text-xs text-[var(--text)] font-medium flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse inline-block" />
                     {name}
                   </p>
-                  <p className="text-[11px] text-[#E5E7EB] mt-0.5">{sub}</p>
+                  <p className="text-[11px] text-[var(--text-soft)] mt-0.5">{sub}</p>
                 </div>
               ))}
             </div>
 
             {/* Newsletter */}
             <div>
-              <h3 className="text-[11px] font-medium uppercase tracking-widest text-[#fbbf24] mb-4 flex items-center gap-2 after:flex-1 after:h-px after:bg-[#fbbf24]/20 after:content-['']">
+              <h3 className="text-[11px] font-medium uppercase tracking-widest text-[var(--accent-strong)] mb-4 flex items-center gap-2 after:flex-1 after:h-px after:bg-[var(--border-strong)] after:content-['']">
                 Stay Updated
               </h3>
-              <p className="text-[11.5px] text-[#E5E7EB] leading-relaxed mb-3">
+              <p className="text-[11.5px] text-[var(--text-soft)] leading-relaxed mb-3">
                 Capabilities updates, new equipment & industry insights.
               </p>
               <input
                 type="email"
                 placeholder="your@email.com"
-                className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-xs text-[#e2e8f0] placeholder-[#475569] outline-none focus:border-[#06b6d4]/50 mb-2"
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-md px-3 py-2 text-xs text-[var(--text)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--accent)] mb-2"
               />
-              <button className="w-full py-2 px-3 bg-[#06b6d4]/15 border border-[#06b6d4]/40 rounded-md text-[#06b6d4] text-xs font-medium uppercase tracking-wider hover:bg-[#06b6d4]/25 hover:border-[#06b6d4]/70 transition-all active:scale-[0.98]">
+              <button className="w-full py-2 px-3 bg-[var(--accent-tint)] border border-[var(--border-strong)] rounded-md text-[var(--accent-strong)] text-xs font-medium uppercase tracking-wider hover:bg-[var(--accent-tint-strong)] transition-all active:scale-[0.98]">
                 Subscribe
               </button>
             </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-white/[0.06] mb-5" />
+          <div className="h-px bg-[var(--border)] mb-5" />
 
-          {/* Bottom bar */}
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-[11.5px] text-[#475569]">
+            <p className="text-[11.5px] text-[var(--text-muted)]">
               © 2025{" "}
-              <span className="text-[#06b6d4]">AtomOne Technologies</span>. All
+              <span className="text-[var(--accent)]">AtomOne Technologies</span>. All
               rights reserved.
             </p>
             <div className="flex gap-4">
@@ -1115,7 +2136,7 @@ export default function LandingPage() {
                 <a
                   key={l}
                   href="https://www.atomone.in/careers"
-                  className="text-[11.5px] text-[#475569] hover:text-[#94a3b8] transition-colors"
+                  className="text-[11.5px] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
                 >
                   {l}
                 </a>
@@ -1123,10 +2144,7 @@ export default function LandingPage() {
             </div>
             <div className="flex gap-2">
               {[
-                {
-                  icon: <Linkedin className="w-3.5 h-3.5" />,
-                  label: "LinkedIn",
-                },
+                { icon: <Linkedin className="w-3.5 h-3.5" />, label: "LinkedIn" },
                 { icon: <Twitter className="w-3.5 h-3.5" />, label: "Twitter" },
                 { icon: <Youtube className="w-3.5 h-3.5" />, label: "YouTube" },
               ].map(({ icon, label }) => (
@@ -1134,7 +2152,7 @@ export default function LandingPage() {
                   key={label}
                   href="https://in.linkedin.com/company/atomone-technologies"
                   aria-label={label}
-                  className="w-7 h-7 rounded-md border border-white/10 bg-white/[0.04] flex items-center justify-center text-[#64748b] hover:bg-[#06b6d4]/12 hover:text-[#06b6d4] hover:border-[#06b6d4]/30 transition-all"
+                  className="w-7 h-7 rounded-md border border-[var(--border)] bg-[var(--surface)] flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--accent-tint)] hover:text-[var(--accent)] hover:border-[var(--border-strong)] transition-all"
                 >
                   {icon}
                 </a>
@@ -1146,4 +2164,3 @@ export default function LandingPage() {
     </div>
   );
 }
-//end here
