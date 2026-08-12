@@ -48,6 +48,11 @@ const BinTrollingprint = ({ currentReport, onEditForm, onBack }) => {
         >
           <i className="bi bi-arrow-left-circle-fill"></i> Back
         </button>
+        <button
+    onClick={() => window.open("/view-code", "_blank")}
+>
+    View Source Code
+</button>
 
         {onEditForm && (
           <button 
