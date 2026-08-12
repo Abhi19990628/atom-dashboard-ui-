@@ -18,8 +18,7 @@ const BeltGrinderMaintenanceForm = () => {
    const { id } = useParams();
     const isViewMode=Boolean(id);
   const [isChecklistOpen, setIsChecklistOpen] = useState(true);
-  const statusOptions = ["", "Ok", "Not Ok", "N/A"];
-
+  const statusOptions = ["", "Ok", "Not Ok", "N/A"];  
   // --- BELT GRINDER CHECKLIST DATA ---
   const initialChecklist = [
     {

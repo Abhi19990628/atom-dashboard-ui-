@@ -50,7 +50,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "print-bin": "node src/components/All_Deperments_Hub/ProductionHub/Views/daily/BinTrollingprint"
   },
   "eslintConfig": {
     "extends": [
@@ -78,3 +78,4 @@
     "tailwindcss": "^3.4.18"
   }
 }
+
