@@ -36,7 +36,8 @@ import Support from "./components/Support";
 import ProductionHistory from "./components/ProductionHistory";
 import AnalysisDashboard from "./components/AnalysisDashboard";
 import AnalysisHubV2 from "./pages/AnalysisHubV2";
-
+import AttendanceDashboard from "./components/attendance/AttendanceDashboard";
+import EmployeeAttendanceProfile from "./components/attendance/EmployeeAttendanceProfile";
 // ========== MODULAR ROUTE IMPORTS ==========
 import QaRoutes from "./routes/QaRoutes";
 import ProductionRoutes from "./routes/ProductionRoute";
@@ -261,418 +262,436 @@ function App() {
   };
 
   return (
-     <UserProvider>
+    <UserProvider>
       <Router>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        theme="light"
-        newestOnTop
-        closeOnClick
-        pauseOnHover
-        style={{ zIndex: 999999 }}
-      />
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Auth onLogin={handleLogin} />} />
-          <Route
-            path="/signup"
-            element={<SignUpPage onLogin={handleLogin} />}
-          />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          theme="light"
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          style={{ zIndex: 999999 }}
+        />
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<Auth onLogin={handleLogin} />} />
+            <Route
+              path="/signup"
+              element={<SignUpPage onLogin={handleLogin} />}
+            />
 
-          {/* Dashboards - Accessible to all logged-in users initially */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/notifications"
-            element={
-              <ProtectedRoute>
-                <Notifications onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/support"
-            element={
-              <ProtectedRoute>
-                <Support onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
+            {/* Dashboards - Accessible to all logged-in users initially */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Notifications onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/support"
+              element={
+                <ProtectedRoute>
+                  <Support onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Admin Only Routes */}
-          <Route
-            path="/machine-assignments"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <MachineAssignments onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Production-history"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <ProductionHistory />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/machines-status"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <MachinesStatus onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/assign-machine"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <AssignMachine onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/idle-case"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <IdleCase onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/idle-reports-list"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <IdleReportsList onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
+            {/* Admin Only Routes */}
+            <Route
+              path="/machine-assignments"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <MachineAssignments onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Production-history"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <ProductionHistory />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/machines-status"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <MachinesStatus onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assign-machine"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AssignMachine onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/idle-case"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <IdleCase onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/idle-reports-list"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <IdleReportsList onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* 🔥 SPECIFIC PLANT ROUTES (Maha Important Fix) 🔥 */}
-          <Route
-            path="/plant1-live"
-            element={
-              <ProtectedRoute allowedRoles={["Plant_1_User"]}>
-                <Plant1Live onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/plant2-live"
-            element={
-              <ProtectedRoute allowedRoles={["Plant_2_User"]}>
-                <Plant2Live onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
+            {/* 🔥 SPECIFIC PLANT ROUTES (Maha Important Fix) 🔥 */}
+            <Route
+              path="/plant1-live"
+              element={
+                <ProtectedRoute allowedRoles={["Plant_1_User"]}>
+                  <Plant1Live onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/plant2-live"
+              element={
+                <ProtectedRoute allowedRoles={["Plant_2_User"]}>
+                  <Plant2Live onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Department Hubs */}
-          <Route
-            path="/qa-hub/*"
-            element={
-              <ProtectedRoute allowedRole="QA_Hub">
-                <QaRoutes />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/production-hub/*"
-            element={
-              <ProtectedRoute allowedRole="Production_Hub">
-                <ProductionRoutes />
-              </ProtectedRoute>
-            }
-          />
+            {/* Department Hubs */}
+            <Route
+              path="/qa-hub/*"
+              element={
+                <ProtectedRoute allowedRole="QA_Hub">
+                  <QaRoutes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/production-hub/*"
+              element={
+                <ProtectedRoute allowedRole="Production_Hub">
+                  <ProductionRoutes />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/maintenance-hub"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <MaintenanceHub />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Maintenance/Machine/*"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <MachineRoutes />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/maintenance-hub"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <MaintenanceHub />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Maintenance/Machine/*"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <MachineRoutes />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/Maintenance/Tool/*"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <ToolRoutes />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/Maintenance/Tool/*"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <ToolRoutes />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/Maintenance/Machine"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <MaintenanceHub />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Maintenance/Tool"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <MaintenanceHub />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/Maintenance/Machine"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <MaintenanceHub />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Maintenance/Tool"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <MaintenanceHub />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Maintenance Views & Reports */}
-          <Route
-            path="/maintenance-view/:formKey"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <MaintenanceView />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Maintenance/Machine/daily"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <MachineDailyReport />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Maintenance/Machine/weekly"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <MachineWeeklyReports />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Maintenance/Tool/daily"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <ToolDailyReports />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Maintenance/Tool/weekly"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <ToolWeekly />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Machine-Card-Report"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <MachineHistoryCardprint />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Machine-Breakdown-Report"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <MachineBreakdownSummaryPrint />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Daily-PowerPress-Report"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <DailyPowerPressChecksheetprint />
-              </ProtectedRoute>
-            }
-          />
+            {/* Maintenance Views & Reports */}
+            <Route
+              path="/maintenance-view/:formKey"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <MaintenanceView />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Maintenance/Machine/daily"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <MachineDailyReport />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Maintenance/Machine/weekly"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <MachineWeeklyReports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Maintenance/Tool/daily"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <ToolDailyReports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Maintenance/Tool/weekly"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <ToolWeekly />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Machine-Card-Report"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <MachineHistoryCardprint />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Machine-Breakdown-Report"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <MachineBreakdownSummaryPrint />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Daily-PowerPress-Report"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <DailyPowerPressChecksheetprint />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/Maintenance/Machine/*"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <MachineRoutes />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Maintenance/Tool/*"
-            element={
-              <ProtectedRoute allowedRole="Maintenance_Hub">
-                <ToolRoutes />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/Maintenance/Machine/*"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <MachineRoutes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Maintenance/Tool/*"
+              element={
+                <ProtectedRoute allowedRole="Maintenance_Hub">
+                  <ToolRoutes />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/qms"
-            element={
-              <ProtectedRoute allowedRole="QA_Hub">
-                <ReportsDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/ReportsDashboard"
-            element={
-              <ProtectedRoute allowedRole="QA_Hub">
-                <ReportsDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/qms-dashboard"
-            element={
-              <ProtectedRoute allowedRole="QA_Hub">
-                <QMSDashboard onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/qms/report/:reportId"
-            element={
-              <ProtectedRoute allowedRole="QA_Hub">
-                <ReportDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/qms/report/:reportId/edit"
-            element={
-              <ProtectedRoute allowedRole="QA_Hub">
-                <ReportEditor />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/qms/patrol-inspection"
-            element={
-              <ProtectedRoute allowedRole="QA_Hub">
-                <PatrolInspection />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/qms/raw-material-form"
-            element={
-              <ProtectedRoute allowedRole="QA_Hub">
-                <RawMaterialForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/qms/pdi-report-form"
-            element={
-              <ProtectedRoute allowedRole="QA_Hub">
-                <PdiReportForm />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/qms"
+              element={
+                <ProtectedRoute allowedRole="QA_Hub">
+                  <ReportsDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ReportsDashboard"
+              element={
+                <ProtectedRoute allowedRole="QA_Hub">
+                  <ReportsDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/qms-dashboard"
+              element={
+                <ProtectedRoute allowedRole="QA_Hub">
+                  <QMSDashboard onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/qms/report/:reportId"
+              element={
+                <ProtectedRoute allowedRole="QA_Hub">
+                  <ReportDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/qms/report/:reportId/edit"
+              element={
+                <ProtectedRoute allowedRole="QA_Hub">
+                  <ReportEditor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/qms/patrol-inspection"
+              element={
+                <ProtectedRoute allowedRole="QA_Hub">
+                  <PatrolInspection />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/qms/raw-material-form"
+              element={
+                <ProtectedRoute allowedRole="QA_Hub">
+                  <RawMaterialForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/qms/pdi-report-form"
+              element={
+                <ProtectedRoute allowedRole="QA_Hub">
+                  <PdiReportForm />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/hiring-departments"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <HrSafetyHub />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Induction-Training"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <InductionTrainingForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Training-History"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <TrainingHistoryCard />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/hiring-departments"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <HrSafetyHub />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Induction-Training"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <InductionTrainingForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Training-History"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <TrainingHistoryCard />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/analysis-hub"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <AnalysisHubV2 />
-              </ProtectedRoute>
-            }
-          />
-          {/* <Route
+            <Route
+              path="/analysis-hub"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AnalysisHubV2 />
+                </ProtectedRoute>
+              }
+            />
+            {/* <Route
   path="/analysis-hub-v2"
   element={<AnalysisHubV2 />}
 /> */}
 
-     <Route path="/view-code" element={<CodeViewer />} />
+            <Route
+              path="/attendance"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AttendanceDashboard onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="*"
-            element={
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "100vh",
-                  backgroundColor: "#f8f1f2",
-                  color: "white",
-                  fontSize: "24px",
-                  flexDirection: "column",
-                  gap: "20px",
-                }}
-              >
-                <div style={{ fontSize: "72px", fontWeight: "bold" }}>404</div>
-                <div>Page Not Found</div>
-                <button
-                  onClick={() => (window.location.href = "/")}
+            <Route
+              path="/attendance/employee/:employeeId"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <EmployeeAttendanceProfile onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route path="/view-code" element={<CodeViewer />} />
+
+            <Route
+              path="*"
+              element={
+                <div
                   style={{
-                    padding: "12px 24px",
-                    background: "linear-gradient(to right, #06b6d4, #fbbf24)",
-                    border: "none",
-                    borderRadius: "8px",
-                    color: "#0f172a",
-                    fontSize: "16px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "100vh",
+                    backgroundColor: "#f8f1f2",
+                    color: "white",
+                    fontSize: "24px",
+                    flexDirection: "column",
+                    gap: "20px",
                   }}
                 >
-                  Go to Home
-                </button>
-              </div>
-            }
-          />
-        </Routes>
-      </div>
-    </Router>
-   </UserProvider>
-    
+                  <div style={{ fontSize: "72px", fontWeight: "bold" }}>404</div>
+                  <div>Page Not Found</div>
+                  <button
+                    onClick={() => (window.location.href = "/")}
+                    style={{
+                      padding: "12px 24px",
+                      background: "linear-gradient(to right, #06b6d4, #fbbf24)",
+                      border: "none",
+                      borderRadius: "8px",
+                      color: "#0f172a",
+                      fontSize: "16px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Go to Home
+                  </button>
+                </div>
+              }
+            />
+          </Routes>
+        </div>
+      </Router>
+    </UserProvider>
+
   );
 }
 
