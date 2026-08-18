@@ -785,15 +785,24 @@ export default function Profile({ onLogout }) {
   useEffect(() => {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'data-theme') {
-          setTheme(document.documentElement.getAttribute('data-theme') || 'light');
+        if (mutation.attributeName === "data-theme") {
+          setTheme(
+            document.documentElement.getAttribute("data-theme") || "light",
+          );
         }
       });
     });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    const handleStorage = () => setTheme(window.localStorage.getItem("atomone-theme") || "light");
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    const handleStorage = () =>
+      setTheme(window.localStorage.getItem("atomone-theme") || "light");
     window.addEventListener("storage", handleStorage);
-    return () => { observer.disconnect(); window.removeEventListener("storage", handleStorage); };
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("storage", handleStorage);
+    };
   }, []);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -832,8 +841,7 @@ export default function Profile({ onLogout }) {
     designation: "",
   });
 
-
-const { setUser } = useUser();
+  const { setUser } = useUser();
   const API_URL = "http://192.168.0.34:8000/api/profile/me/";
   console.log("Auth Token:", authToken);
 
@@ -854,10 +862,12 @@ const { setUser } = useUser();
 
         const data = await response.json();
         console.log("Profile API Response:", data);
-        localStorage.setItem("full_name", data.full_name || "");
-        if (data.profile_image) {
-          localStorage.setItem("profile_image", data.profile_image);
-        }
+        localStorage.setItem(
+          "full_name",
+          data.full_name || data.username || "",
+        );
+
+        localStorage.setItem("profile_image", data.profile_image || "");
         console.log("PROFILE FETCH DATA:", data);
 
         setProfileData((prev) => ({
@@ -870,6 +880,16 @@ const { setUser } = useUser();
           department: data.department || "",
           designation: data.designation || "",
         }));
+        setUser({
+          fullName: data.full_name || data.username || "User",
+          email: data.contact_email || data.email || data.username || "",
+          profileImage: data.profile_image || "",
+          role: data.role || data.user_role || "",
+          department: data.department || "",
+          designation: data.designation || "",
+          phone: data.mobile_no || "",
+          location: data.location || "",
+        });
         if (data.profile_image) {
           setCustomImage(data.profile_image);
           setSelectedAvatar(-1);
@@ -1015,18 +1035,16 @@ const { setUser } = useUser();
       const updatedData = await response.json();
 
       setUser({
-  fullName: updatedData.full_name || updatedData.username || "User",
-  email:
-    updatedData.contact_email ||
-    updatedData.email ||
-    profileData.email,
-  profileImage: updatedData.profile_image || "",
-  role: updatedData.role || updatedData.user_role || "",
-  department: updatedData.department || "",
-  designation: updatedData.designation || "",
-  phone: updatedData.mobile_no || "",
-  location: updatedData.location || "",
-});
+        fullName: updatedData.full_name || updatedData.username || "User",
+        email:
+          updatedData.contact_email || updatedData.email || profileData.email,
+        profileImage: updatedData.profile_image || "",
+        role: updatedData.role || updatedData.user_role || "",
+        department: updatedData.department || "",
+        designation: updatedData.designation || "",
+        phone: updatedData.mobile_no || "",
+        location: updatedData.location || "",
+      });
 
       setProfileData((prev) => ({
         ...prev,
@@ -1062,9 +1080,12 @@ const { setUser } = useUser();
   const currentAvatar = getCurrentAvatar();
 
   return (
-    <div data-theme={theme} className="min-h-screen bg-[var(--bg-main)] flex relative overflow-hidden transition-colors duration-300">
+    <div
+      data-theme={theme}
+      className="min-h-screen bg-[var(--bg-main)] flex relative overflow-hidden transition-colors duration-300"
+    >
       <style>{THEME_VARS}</style>
-      
+
       {/* Animated Background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
@@ -1086,7 +1107,10 @@ const { setUser } = useUser();
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              backgroundColor: i % 2 === 0 ? "var(--accent-primary)" : "var(--accent-secondary)",
+              backgroundColor:
+                i % 2 === 0
+                  ? "var(--accent-primary)"
+                  : "var(--accent-secondary)",
             }}
             animate={{
               y: [0, -100, 0],
@@ -1105,7 +1129,7 @@ const { setUser } = useUser();
         <div
           className="absolute inset-0 opacity-[0.4]"
           style={{
-            backgroundImage: `linear-gradient(var(--pattern-color) 1px, transparent 1px), linear-gradient(90deg, var(--pattern-color) 1px, transparent 1px)`,
+            // backgroundImage: `linear-gradient(var(--pattern-color) 1px, transparent 1px), linear-gradient(90deg, var(--pattern-color) 1px, transparent 1px)`,
             backgroundSize: "50px 50px",
           }}
         />
@@ -1116,7 +1140,9 @@ const { setUser } = useUser();
       <div className="flex-1 overflow-auto relative z-10 custom-scrollbar">
         <div className="max-w-[1200px] mx-auto px-8 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-extrabold mb-2 text-[var(--text-main)]">My Profile</h1>
+            <h1 className="text-3xl font-extrabold mb-2 text-[var(--text-main)]">
+              My Profile
+            </h1>
             <p className="text-[var(--text-muted)] text-sm font-medium">
               Manage your account settings and preferences
             </p>
@@ -1146,7 +1172,8 @@ const { setUser } = useUser();
                       <motion.div
                         className="absolute -inset-4 rounded-full blur-2xl opacity-60"
                         style={{
-                          background: "radial-gradient(circle, var(--glow-1), var(--glow-2))",
+                          background:
+                            "radial-gradient(circle, var(--glow-1), var(--glow-2))",
                         }}
                         animate={{
                           scale: [1, 1.2, 1],
@@ -1273,7 +1300,9 @@ const { setUser } = useUser();
 
                           <div
                             className="pt-4"
-                            style={{ borderTop: "1px solid var(--border-main)" }}
+                            style={{
+                              borderTop: "1px solid var(--border-main)",
+                            }}
                           >
                             <p className="text-[var(--text-muted)] text-xs mb-3 font-semibold">
                               Or choose preset:
@@ -1292,10 +1321,14 @@ const { setUser } = useUser();
                                   }}
                                   className={`relative w-14 h-14 rounded-full overflow-hidden ${avatar.bgColor} flex items-center justify-center cursor-pointer shadow-sm`}
                                   style={{
-                                    border: selectedAvatar === avatar.id && !customImage
+                                    border:
+                                      selectedAvatar === avatar.id &&
+                                      !customImage
                                         ? "2px solid var(--accent-primary)"
                                         : "2px solid var(--border-main)",
-                                    boxShadow: selectedAvatar === avatar.id && !customImage
+                                    boxShadow:
+                                      selectedAvatar === avatar.id &&
+                                      !customImage
                                         ? "0 10px 15px -3px var(--accent-tint)"
                                         : "none",
                                   }}
@@ -1304,18 +1337,19 @@ const { setUser } = useUser();
                                     {avatar.emoji}
                                   </span>
 
-                                  {selectedAvatar === avatar.id && !customImage && (
-                                    <motion.div
-                                      initial={{ scale: 0 }}
-                                      animate={{ scale: 1 }}
-                                      className="absolute inset-0 backdrop-blur-sm flex items-center justify-center bg-[var(--accent-tint)]"
-                                    >
-                                      <Check
-                                        className="w-6 h-6 text-white"
-                                        strokeWidth={3}
-                                      />
-                                    </motion.div>
-                                  )}
+                                  {selectedAvatar === avatar.id &&
+                                    !customImage && (
+                                      <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="absolute inset-0 backdrop-blur-sm flex items-center justify-center bg-[var(--accent-tint)]"
+                                      >
+                                        <Check
+                                          className="w-6 h-6 text-white"
+                                          strokeWidth={3}
+                                        />
+                                      </motion.div>
+                                    )}
                                 </motion.button>
                               ))}
                             </div>
@@ -1348,7 +1382,9 @@ const { setUser } = useUser();
                       <p className="text-3xl font-bold mb-1 text-[var(--accent-primary)]">
                         0
                       </p>
-                      <p className="text-[var(--text-muted)] font-medium text-xs">Tasks Done</p>
+                      <p className="text-[var(--text-muted)] font-medium text-xs">
+                        Tasks Done
+                      </p>
                     </div>
 
                     <div
@@ -1358,7 +1394,9 @@ const { setUser } = useUser();
                       <p className="text-3xl font-bold mb-1 text-[var(--accent-secondary)]">
                         0%
                       </p>
-                      <p className="text-[var(--text-muted)] font-medium text-xs">Efficiency</p>
+                      <p className="text-[var(--text-muted)] font-medium text-xs">
+                        Efficiency
+                      </p>
                     </div>
                   </div>
 
