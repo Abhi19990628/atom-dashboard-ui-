@@ -4,7 +4,7 @@ const people = [
     // =====================================================
     {
         id: "WRK001",
-        name: "Amit Patel",
+        name: "Aman Pal",
         designation: "Machine Operator",
         department: "Production",
         employeeType: "Worker",
