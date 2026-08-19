@@ -17,6 +17,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Core Components
+import Sidebar from "./components/Sidebar";
 import CodeViewer from "./components/CodeViewer";
 import { UserProvider } from "./context/UserContext";
 import Auth from "./components/Auth";
@@ -84,85 +85,64 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-const AccessDeniedScreen = () => {
-  const navigate = useNavigate();
-
+const AccessDeniedScreen = ({ onLogout }) => {
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(2,6,23,0.85)",
-        backdropFilter: "blur(12px)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 99999,
-      }}
-    >
-      <div
-        style={{
-          width: "min(520px,90vw)",
-          background: "rgba(15,23,42,0.95)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: "24px",
-          padding: "32px",
-          textAlign: "center",
-          boxShadow: "0 25px 80px rgba(0,0,0,0.45)",
-        }}
-      >
+    <div className="min-h-screen bg-[#0f172a] flex">
+
+      {/* Sidebar always visible */}
+      <Sidebar onLogout={onLogout} />
+
+      {/* Restricted content area */}
+      <div className="flex-1 min-h-screen flex items-center justify-center bg-[#0f172a]">
         <div
           style={{
-            width: 72,
-            height: 72,
-            margin: "0 auto 20px",
-            borderRadius: 18,
-            background: "linear-gradient(135deg,#f59e0b,#d97706)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 32,
+            width: "min(520px, 90vw)",
+            background: "rgba(15,23,42,0.95)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "24px",
+            padding: "32px",
+            textAlign: "center",
+            boxShadow: "0 25px 80px rgba(0,0,0,0.45)",
           }}
         >
-          🔒
+          <div
+            style={{
+              width: 72,
+              height: 72,
+              margin: "0 auto 20px",
+              borderRadius: 18,
+              background: "linear-gradient(135deg,#f59e0b,#d97706)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 32,
+            }}
+          >
+            🔒
+          </div>
+
+          <h2
+            style={{
+              color: "#fff",
+              fontWeight: 800,
+              fontSize: 28,
+              marginBottom: 12,
+            }}
+          >
+            Access Restricted
+          </h2>
+
+          <p
+            style={{
+              color: "#94a3b8",
+              lineHeight: 1.8,
+              marginBottom: 0,
+            }}
+          >
+            You do not have permission to access this page.
+            Please select an available module from the sidebar.
+          </p>
         </div>
-
-        <h2
-          style={{
-            color: "#fff",
-            fontWeight: 800,
-            fontSize: 28,
-            marginBottom: 12,
-          }}
-        >
-          Access Restricted
-        </h2>
-
-        <p
-          style={{
-            color: "#94a3b8",
-            lineHeight: 1.8,
-            marginBottom: 24,
-          }}
-        >
-          You currently do not have permission to access this department. Please
-          contact your administrator if access is required.
-        </p>
-
-        <button
-          onClick={() => navigate("/dashboard")}
-          style={{
-            border: "none",
-            borderRadius: 12,
-            padding: "12px 24px",
-            background: "linear-gradient(135deg,#3b82f6,#2563eb)",
-            color: "#fff",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          ← Return to Dashboard
-        </button>
       </div>
     </div>
   );
@@ -223,10 +203,15 @@ function App() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("user_role");
+    localStorage.removeItem("user_groups");
     localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     localStorage.removeItem("username");
+    localStorage.removeItem("full_name");
+    localStorage.removeItem("profile_image");
   };
 
   // 🔥 UPDATED PROTECTED ROUTE LOGIC 🔥
@@ -234,28 +219,55 @@ function App() {
     children,
     allowedRole,
     allowedRoles,
+    allowedGroup,
     adminOnly,
   }) => {
-    if (!isAuthenticated) return <Navigate to="/login" replace />;
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }
+
     const userRole = localStorage.getItem("user_role");
 
-    // Admin ko full access hai
-    if (userRole === "Admin") return children;
+    const userGroups = JSON.parse(
+      localStorage.getItem("user_groups") || "[]"
+    );
 
-    // Agar route sirf Admin/Manager/Supervisor ke liye hai, toh baaki sab block (Plant_1, Plant_2, QA, etc)
+    // Admin ko full access hai
+    if (userRole === "Admin") {
+      return children;
+    }
+
+    // Django Group based access
+    if (
+      allowedGroup &&
+      !userGroups.includes(allowedGroup)
+    ) {
+      return <AccessDeniedScreen onLogout={handleLogout} />;
+    }
+
+    // Admin / Manager / Supervisor access
     if (adminOnly) {
-      if (userRole !== "Manager" && userRole !== "Supervisor") {
-        return <AccessDeniedScreen />;
+      if (
+        userRole !== "Manager" &&
+        userRole !== "Supervisor"
+      ) {
+        return <AccessDeniedScreen onLogout={handleLogout} />;
       }
     }
 
-    // Naya logic: Multiple roles ke liye (Jaise sirf Plant_1_User ko allow karna)
+    // Multiple roles
     if (allowedRoles && allowedRoles.length > 0) {
-      if (!allowedRoles.includes(userRole)) return <AccessDeniedScreen />;
+      if (!allowedRoles.includes(userRole)) {
+        return <AccessDeniedScreen onLogout={handleLogout} />;
+      }
     }
-    // Purana logic: Single role ke liye (QA, Production etc)
-    else if (allowedRole && userRole !== allowedRole) {
-      return <AccessDeniedScreen />;
+
+    // Single role
+    else if (
+      allowedRole &&
+      userRole !== allowedRole
+    ) {
+      return <AccessDeniedScreen onLogout={handleLogout} />;
     }
 
     return children;
@@ -286,7 +298,7 @@ function App() {
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedGroup="Dashboard_Users">
                   <Dashboard onLogout={handleLogout} />
                 </ProtectedRoute>
               }
@@ -378,7 +390,7 @@ function App() {
             <Route
               path="/plant2-live"
               element={
-                <ProtectedRoute allowedRoles={["Plant_2_User"]}>
+                <ProtectedRoute allowedGroup="Plant_2_User">
                   <Plant2Live onLogout={handleLogout} />
                 </ProtectedRoute>
               }

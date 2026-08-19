@@ -1178,7 +1178,10 @@ export default function Auth({ onLogin }) {
         localStorage.setItem("refresh_token", data.refresh);
         localStorage.setItem("user_role", data.role);
         localStorage.setItem("username", data.username);
-
+        localStorage.setItem(
+          "user_groups",
+          JSON.stringify(data.groups || [])
+        );
         // Fetch complete profile data immediately after login
         const profileResponse = await fetch(`${apiUrl}/api/profile/me/`, {
           method: "GET",

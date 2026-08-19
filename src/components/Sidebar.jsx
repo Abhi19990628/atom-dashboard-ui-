@@ -1882,6 +1882,10 @@ export default function Sidebar({ onLogout }) {
   // 🔥 DATA DESTRUCTURING (ab variables local storage ki jagah State se aayenge)
   const userRole = user?.role || localStorage.getItem("user_role") || "User";
 
+  const userGroups =
+    user?.groups ||
+    JSON.parse(localStorage.getItem("user_groups") || "[]");
+
   const userName = user?.email || localStorage.getItem("username") || "";
 
   const fullName =
@@ -1892,20 +1896,33 @@ export default function Sidebar({ onLogout }) {
 
   // Access Control
   const hasAccess = (path) => {
-    if (userRole === "Admin") return true;
+    // Admin can access everything
+    if (userRole === "Admin") {
+      return true;
+    }
 
-    // Optional Check: Using userRole for Switch instead of User?.role if context isn't ready
-    const roleToCheck = userRole;
+    // Dashboard access through Django Group
+    if (path === "/dashboard") {
+      return userGroups.includes("Dashboard_Users");
+    }
 
-    switch (roleToCheck) {
+    // Plant 2 access through Django Group
+    if (path === "/plant2-live") {
+      return userGroups.includes("Plant_2_User");
+    }
+
+    switch (userRole) {
       case "QA_Hub":
-        return ["/dashboard", "/qa-hub", "/qms"].includes(path);
+        return ["/qa-hub", "/qms"].includes(path);
+
       case "Production_Hub":
-        return ["/dashboard", "/production-hub"].includes(path);
+        return ["/production-hub"].includes(path);
+
       case "Maintenance_Hub":
-        return ["/dashboard", "/maintenance-hub"].includes(path);
+        return ["/maintenance-hub"].includes(path);
+
       default:
-        return path === "/dashboard";
+        return false;
     }
   };
 
@@ -2040,6 +2057,7 @@ export default function Sidebar({ onLogout }) {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("user_role");
+    localStorage.removeItem("user_groups");
     localStorage.removeItem("username");
     localStorage.removeItem("full_name");
     localStorage.removeItem("profile_image");
@@ -2178,11 +2196,10 @@ export default function Sidebar({ onLogout }) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={openSidebar}
-            className={`fixed ${getButtonPosition()} z-50 p-2 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
-              theme === "light"
-                ? "bg-white border border-slate-200 text-blue-600 shadow-lg shadow-slate-200/50"
-                : "bg-gradient-to-br from-[#1e293b] to-[#0f172a] border-2 border-indigo-500/40 text-indigo-400 shadow-2xl shadow-indigo-500/30"
-            }`}
+            className={`fixed ${getButtonPosition()} z-50 p-2 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${theme === "light"
+              ? "bg-white border border-slate-200 text-blue-600 shadow-lg shadow-slate-200/50"
+              : "bg-gradient-to-br from-[#1e293b] to-[#0f172a] border-2 border-indigo-500/40 text-indigo-400 shadow-2xl shadow-indigo-500/30"
+              }`}
             aria-label="Open menu"
             style={{
               backdropFilter: "blur(10px)",
@@ -2201,9 +2218,8 @@ export default function Sidebar({ onLogout }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className={`fixed inset-0 backdrop-blur-sm z-40 ${
-              theme === "light" ? "bg-slate-900/40" : "bg-black/70"
-            }`}
+            className={`fixed inset-0 backdrop-blur-sm z-40 ${theme === "light" ? "bg-slate-900/40" : "bg-black/70"
+              }`}
             onClick={closeSidebar}
           />
         )}
@@ -2222,10 +2238,9 @@ export default function Sidebar({ onLogout }) {
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className={`
           fixed left-0 top-0 h-screen z-50 flex flex-col overflow-hidden
-          ${
-            theme === "light"
-              ? "bg-white border-r border-slate-200 shadow-xl"
-              : "bg-gradient-to-b from-[#1e293b] to-[#0f172a] border-r border-indigo-500/20 shadow-2xl"
+          ${theme === "light"
+            ? "bg-white border-r border-slate-200 shadow-xl"
+            : "bg-gradient-to-b from-[#1e293b] to-[#0f172a] border-r border-indigo-500/20 shadow-2xl"
           }
         `}
         style={{ minWidth: getSidebarWidth(), maxWidth: getSidebarWidth() }}
@@ -2237,11 +2252,10 @@ export default function Sidebar({ onLogout }) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={closeSidebar}
-            className={`absolute top-3 right-3 z-50 p-1.5 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border ${
-              theme === "light"
-                ? "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200"
-                : "bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 border-indigo-500/30"
-            }`}
+            className={`absolute top-3 right-3 z-50 p-1.5 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border ${theme === "light"
+              ? "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200"
+              : "bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 border-indigo-500/30"
+              }`}
             aria-label="Go back"
           >
             <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -2253,9 +2267,8 @@ export default function Sidebar({ onLogout }) {
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className={`absolute -top-20 -left-20 w-40 h-40 rounded-full blur-3xl ${
-              theme === "light" ? "bg-blue-400/10" : "bg-indigo-500/20"
-            }`}
+            className={`absolute -top-20 -left-20 w-40 h-40 rounded-full blur-3xl ${theme === "light" ? "bg-blue-400/10" : "bg-indigo-500/20"
+              }`}
           />
           <motion.div
             animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.5, 0.3] }}
@@ -2265,9 +2278,8 @@ export default function Sidebar({ onLogout }) {
               ease: "easeInOut",
               delay: 1,
             }}
-            className={`absolute -bottom-20 -right-20 w-40 h-40 rounded-full blur-3xl ${
-              theme === "light" ? "bg-sky-400/10" : "bg-yellow-500/20"
-            }`}
+            className={`absolute -bottom-20 -right-20 w-40 h-40 rounded-full blur-3xl ${theme === "light" ? "bg-sky-400/10" : "bg-yellow-500/20"
+              }`}
           />
         </div>
 
@@ -2277,11 +2289,10 @@ export default function Sidebar({ onLogout }) {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={toggleCollapse}
-            className={`absolute right-[10px] top-5 z-50 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer ${
-              theme === "light"
-                ? "bg-white border border-slate-200 shadow-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                : "bg-gradient-to-br from-indigo-500 to-indigo-600 border-2 border-[#0f172a] shadow-lg shadow-indigo-500/50 hover:shadow-indigo-500/80 text-white"
-            }`}
+            className={`absolute right-[10px] top-5 z-50 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer ${theme === "light"
+              ? "bg-white border border-slate-200 shadow-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+              : "bg-gradient-to-br from-indigo-500 to-indigo-600 border-2 border-[#0f172a] shadow-lg shadow-indigo-500/50 hover:shadow-indigo-500/80 text-white"
+              }`}
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
@@ -2294,11 +2305,10 @@ export default function Sidebar({ onLogout }) {
 
         {/* Logo Section */}
         <div
-          className={`pt-10 pb-2 px-3 relative ${
-            theme === "light"
-              ? "border-b border-slate-100"
-              : "border-b border-indigo-500/20"
-          } ${!shouldShowLabels() ? "flex items-center justify-center" : ""}`}
+          className={`pt-10 pb-2 px-3 relative ${theme === "light"
+            ? "border-b border-slate-100"
+            : "border-b border-indigo-500/20"
+            } ${!shouldShowLabels() ? "flex items-center justify-center" : ""}`}
         >
           <motion.div
             className="flex items-center justify-center cursor-pointer group relative w-full"
@@ -2320,11 +2330,10 @@ export default function Sidebar({ onLogout }) {
                   className="relative flex justify-center w-full"
                 >
                   <div
-                    className={`absolute inset-0 rounded-lg blur-xl transition-opacity ${
-                      theme === "light"
-                        ? "bg-blue-100 opacity-40 group-hover:opacity-60"
-                        : "bg-gradient-to-r from-indigo-500/30 to-yellow-500/30 opacity-50 group-hover:opacity-75"
-                    }`}
+                    className={`absolute inset-0 rounded-lg blur-xl transition-opacity ${theme === "light"
+                      ? "bg-blue-100 opacity-40 group-hover:opacity-60"
+                      : "bg-gradient-to-r from-indigo-500/30 to-yellow-500/30 opacity-50 group-hover:opacity-75"
+                      }`}
                   />
                   <img
                     src={fullLogo}
@@ -2342,18 +2351,16 @@ export default function Sidebar({ onLogout }) {
                   className="relative flex items-center justify-center"
                 >
                   <div
-                    className={`absolute inset-0 rounded-xl blur-lg transition-opacity ${
-                      theme === "light"
-                        ? "bg-blue-200 opacity-50 group-hover:opacity-80"
-                        : "bg-gradient-to-br from-indigo-400/40 to-yellow-400/40 opacity-70 group-hover:opacity-100"
-                    }`}
+                    className={`absolute inset-0 rounded-xl blur-lg transition-opacity ${theme === "light"
+                      ? "bg-blue-200 opacity-50 group-hover:opacity-80"
+                      : "bg-gradient-to-br from-indigo-400/40 to-yellow-400/40 opacity-70 group-hover:opacity-100"
+                      }`}
                   />
                   <div
-                    className={`relative rounded-xl overflow-hidden ${
-                      theme === "light"
-                        ? "border border-slate-200 shadow-sm bg-white"
-                        : "border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/30"
-                    } ${screenInfo.isIPadMini ? "w-8 h-8" : "w-9 h-9"}`}
+                    className={`relative rounded-xl overflow-hidden ${theme === "light"
+                      ? "border border-slate-200 shadow-sm bg-white"
+                      : "border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/30"
+                      } ${screenInfo.isIPadMini ? "w-8 h-8" : "w-9 h-9"}`}
                   >
                     <img
                       src={smallLogo}
@@ -2388,6 +2395,11 @@ export default function Sidebar({ onLogout }) {
               >
                 <motion.button
                   onClick={() => {
+                    if (!hasAccess(item.path)) {
+                      toast.error("You do not have permission to access this page.");
+                      return;
+                    }
+
                     navigate(item.path);
                     closeSidebar();
                   }}
@@ -2396,18 +2408,15 @@ export default function Sidebar({ onLogout }) {
                     scale: isCentered ? 1.02 : 1,
                   }}
                   whileTap={{ scale: 0.98 }}
-                  className={`w-full flex items-center ${
-                    isCentered ? "justify-center" : gap
-                  } ${itemPadding} rounded-lg transition-all relative group ${
-                    isActive ? colors.text : colors.inactiveText
-                  }`}
+                  className={`w-full flex items-center ${isCentered ? "justify-center" : gap
+                    } ${itemPadding} rounded-lg transition-all relative group ${isActive ? colors.text : colors.inactiveText
+                    }`}
                 >
                   {/* Hover Effect */}
                   {!isActive && (
                     <motion.div
-                      className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity blur-sm ${
-                        theme === "light" ? "bg-slate-100/60" : colors.hoverGlow
-                      }`}
+                      className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity blur-sm ${theme === "light" ? "bg-slate-100/60" : colors.hoverGlow
+                        }`}
                     />
                   )}
 
@@ -2440,14 +2449,12 @@ export default function Sidebar({ onLogout }) {
                   {/* Icon */}
                   <div className="relative z-10">
                     <motion.div
-                      className={`absolute inset-0 rounded-md blur-sm transition-all ${
-                        isActive ? colors.glow : "bg-transparent"
-                      }`}
+                      className={`absolute inset-0 rounded-md blur-sm transition-all ${isActive ? colors.glow : "bg-transparent"
+                        }`}
                     />
                     <Icon
-                      className={`relative ${iconSize} flex-shrink-0 transition-all ${
-                        isActive ? colors.iconFilter : ""
-                      } group-hover:${colors.iconFilter}`}
+                      className={`relative ${iconSize} flex-shrink-0 transition-all ${isActive ? colors.iconFilter : ""
+                        } group-hover:${colors.iconFilter}`}
                     />
                   </div>
 
@@ -2494,9 +2501,8 @@ export default function Sidebar({ onLogout }) {
 
         {/* Divider */}
         <div
-          className={`mx-2 border-t ${
-            theme === "light" ? "border-slate-200" : "border-indigo-500/10"
-          }`}
+          className={`mx-2 border-t ${theme === "light" ? "border-slate-200" : "border-indigo-500/10"
+            }`}
         />
 
         {/* Bottom Section */}
@@ -2506,19 +2512,19 @@ export default function Sidebar({ onLogout }) {
             const bottomColors =
               theme === "light"
                 ? {
-                    hoverGlow: "bg-slate-100/60",
-                    badge: "bg-red-100 text-red-600 border-red-200",
-                    inactiveText:
-                      "text-slate-600 hover:text-blue-600 hover:bg-slate-50/50",
-                  }
+                  hoverGlow: "bg-slate-100/60",
+                  badge: "bg-red-100 text-red-600 border-red-200",
+                  inactiveText:
+                    "text-slate-600 hover:text-blue-600 hover:bg-slate-50/50",
+                }
                 : item.color === "indigo"
-                ? {
+                  ? {
                     hoverGlow:
                       "bg-gradient-to-r from-indigo-500/10 to-transparent",
                     badge: "bg-red-500/20 text-red-400 border-red-500/30",
                     inactiveText: "text-slate-400 hover:text-slate-200",
                   }
-                : {
+                  : {
                     hoverGlow:
                       "bg-gradient-to-r from-yellow-500/10 to-transparent",
                     badge: "bg-red-500/20 text-red-400 border-red-500/30",
@@ -2543,15 +2549,12 @@ export default function Sidebar({ onLogout }) {
                   scale: isCentered ? 1.02 : 1,
                 }}
                 whileTap={{ scale: 0.98 }}
-                className={`w-full flex items-center ${
-                  isCentered ? "justify-center" : gap
-                } ${itemPadding} rounded-lg transition-all relative group ${
-                  bottomColors.inactiveText
-                } ${
-                  item.path === "/notifications" && notificationAlert
+                className={`w-full flex items-center ${isCentered ? "justify-center" : gap
+                  } ${itemPadding} rounded-lg transition-all relative group ${bottomColors.inactiveText
+                  } ${item.path === "/notifications" && notificationAlert
                     ? "notification-glow border border-red-400"
                     : ""
-                }`}
+                  }`}
               >
                 <motion.div
                   className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity blur-sm ${bottomColors.hoverGlow}`}
@@ -2596,24 +2599,21 @@ export default function Sidebar({ onLogout }) {
                   <AnimatePresence>
                     {showLabel ? (
                       <motion.span
-                        className={`relative z-10 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${
-                          bottomColors.badge
-                        } ${
-                          item.path === "/notifications" && hasNewNotification
+                        className={`relative z-10 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${bottomColors.badge
+                          } ${item.path === "/notifications" && hasNewNotification
                             ? "bell-alert"
                             : ""
-                        }`}
+                          }`}
                       >
                         {item.badge}
                       </motion.span>
                     ) : (
                       isCentered && (
                         <div
-                          className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50 ${
-                            theme === "light"
-                              ? "border border-white"
-                              : "border border-[#1e293b]"
-                          }`}
+                          className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50 ${theme === "light"
+                            ? "border border-white"
+                            : "border border-[#1e293b]"
+                            }`}
                         />
                       )
                     )}
@@ -2626,11 +2626,10 @@ export default function Sidebar({ onLogout }) {
 
         {/* User Profile */}
         <div
-          className={`p-2 ${
-            theme === "light"
-              ? "border-t border-slate-100"
-              : "border-t border-indigo-500/20"
-          }`}
+          className={`p-2 ${theme === "light"
+            ? "border-t border-slate-100"
+            : "border-t border-indigo-500/20"
+            }`}
         >
           {shouldShowLabels() ? (
             <motion.div
@@ -2640,11 +2639,10 @@ export default function Sidebar({ onLogout }) {
                 navigate("/profile");
                 closeSidebar();
               }}
-              className={`flex items-center gap-1.5 p-1.5 rounded-lg relative overflow-hidden group cursor-pointer ${
-                theme === "light"
-                  ? "bg-slate-50 border border-slate-200 hover:bg-slate-100"
-                  : "bg-gradient-to-r from-slate-700/30 to-slate-700/20 border border-slate-700/50"
-              }`}
+              className={`flex items-center gap-1.5 p-1.5 rounded-lg relative overflow-hidden group cursor-pointer ${theme === "light"
+                ? "bg-slate-50 border border-slate-200 hover:bg-slate-100"
+                : "bg-gradient-to-r from-slate-700/30 to-slate-700/20 border border-slate-700/50"
+                }`}
             >
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
@@ -2658,20 +2656,17 @@ export default function Sidebar({ onLogout }) {
               />
               <div className="relative flex-shrink-0">
                 <div
-                  className={`absolute inset-0 rounded-full blur-md transition-opacity ${
-                    theme === "light"
-                      ? "bg-blue-200 opacity-0 group-hover:opacity-50"
-                      : "bg-gradient-to-br from-indigo-500 to-yellow-500 opacity-50 group-hover:opacity-75"
-                  }`}
+                  className={`absolute inset-0 rounded-full blur-md transition-opacity ${theme === "light"
+                    ? "bg-blue-200 opacity-0 group-hover:opacity-50"
+                    : "bg-gradient-to-br from-indigo-500 to-yellow-500 opacity-50 group-hover:opacity-75"
+                    }`}
                 />
                 <div
-                  className={`relative rounded-full overflow-hidden ${
-                    screenInfo.isIPadMini ? "w-8 h-8" : "w-10 h-10"
-                  } ${
-                    theme === "light"
+                  className={`relative rounded-full overflow-hidden ${screenInfo.isIPadMini ? "w-8 h-8" : "w-10 h-10"
+                    } ${theme === "light"
                       ? "border border-slate-200 shadow-sm"
                       : "shadow-lg"
-                  }`}
+                    }`}
                 >
                   <img
                     src={profileImage || "logo_head.png"}
@@ -2682,9 +2677,8 @@ export default function Sidebar({ onLogout }) {
               </div>
               <div className="flex-1 min-w-0 relative z-10 pt-3 pl-5">
                 <p
-                  className={`text-base truncate font-medium ${
-                    theme === "light" ? "text-slate-800" : "text-slate-200"
-                  }`}
+                  className={`text-base truncate font-medium ${theme === "light" ? "text-slate-800" : "text-slate-200"
+                    }`}
                 >
                   {fullName || userName}
                 </p>
@@ -2696,11 +2690,10 @@ export default function Sidebar({ onLogout }) {
                   e.stopPropagation();
                   handleLogout();
                 }}
-                className={`relative z-10 transition-colors flex-shrink-0 ${
-                  theme === "light"
-                    ? "text-red-500 hover:text-red-600"
-                    : "text-red-400 hover:text-red-300"
-                }`}
+                className={`relative z-10 transition-colors flex-shrink-0 ${theme === "light"
+                  ? "text-red-500 hover:text-red-600"
+                  : "text-red-400 hover:text-red-300"
+                  }`}
               >
                 <LogOut className="w-4 h-4" />
               </motion.button>
@@ -2716,20 +2709,17 @@ export default function Sidebar({ onLogout }) {
               className="flex items-center justify-center cursor-pointer group relative"
             >
               <div
-                className={`absolute inset-0 rounded-full blur-lg transition-opacity ${
-                  theme === "light"
-                    ? "bg-blue-300/40 opacity-0 group-hover:opacity-100"
-                    : "bg-gradient-to-br from-indigo-500/40 to-yellow-500/40 opacity-50 group-hover:opacity-100"
-                }`}
+                className={`absolute inset-0 rounded-full blur-lg transition-opacity ${theme === "light"
+                  ? "bg-blue-300/40 opacity-0 group-hover:opacity-100"
+                  : "bg-gradient-to-br from-indigo-500/40 to-yellow-500/40 opacity-50 group-hover:opacity-100"
+                  }`}
               />
               <div
-                className={`relative rounded-full overflow-hidden ${
-                  screenInfo.isIPadMini ? "w-10 h-10" : "w-12 h-12"
-                } ${
-                  theme === "light"
+                className={`relative rounded-full overflow-hidden ${screenInfo.isIPadMini ? "w-10 h-10" : "w-12 h-12"
+                  } ${theme === "light"
                     ? "border border-slate-200 shadow-md bg-white"
                     : "border-2 border-indigo-400/30 shadow-xl shadow-indigo-500/40"
-                }`}
+                  }`}
               >
                 <img
                   src={profileImage || "AshokSir.jpg"}
@@ -2738,11 +2728,10 @@ export default function Sidebar({ onLogout }) {
                 />
               </div>
               <div
-                className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50 ${
-                  theme === "light"
-                    ? "border border-white"
-                    : "border-2 border-[#1e293b]"
-                }`}
+                className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50 ${theme === "light"
+                  ? "border border-white"
+                  : "border-2 border-[#1e293b]"
+                  }`}
               />
             </motion.div>
           )}

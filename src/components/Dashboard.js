@@ -15,11 +15,11 @@ import {
   Filler
 } from 'chart.js';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Factory, 
+import {
+  Factory,
   TrendingUp,
   Activity,
-  Gauge, 
+  Gauge,
   Clock,
   Calendar,
   Sparkles,
@@ -33,12 +33,12 @@ import Sidebar from './Sidebar';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 
-import { 
-  getDashboardData, 
-  getHourlyProductionData, 
-  getMachineProductionData, 
-  getProductionLineStatusData, 
-  getAvailableDates 
+import {
+  getDashboardData,
+  getHourlyProductionData,
+  getMachineProductionData,
+  getProductionLineStatusData,
+  getAvailableDates
 } from '../services/apiService';
 
 ChartJS.register(
@@ -75,17 +75,17 @@ const Dashboard = ({ onLogout }) => {
     isDesktop: true,
     width: 0
   });
-  
+
   // Dashboard data states
   const [totalMachines, setTotalMachines] = useState(57);
   const [runningMachines, setRunningMachines] = useState(41);
   const [totalProduction, setTotalProduction] = useState(15420);
-  
+
   // Header states
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [nextRefresh, setNextRefresh] = useState('');
-  
+
   // Filter states
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedShift, setSelectedShift] = useState('');
@@ -100,7 +100,7 @@ const Dashboard = ({ onLogout }) => {
     { value: 'morning', label: 'Morning (8:30AM - 8PM)' },
     { value: 'night', label: 'Night (8:30PM - 8AM)' }
   ]);
-  
+
   // Graph data states
   const [hourlyProductionData, setHourlyProductionData] = useState({ labels: [], datasets: [] });
   const [machineWiseData, setMachineWiseData] = useState({ labels: [], datasets: [] });
@@ -112,8 +112,15 @@ const Dashboard = ({ onLogout }) => {
   const refreshTimerRef = useRef(null);
 
   // 🔥 CHECK ROLE (WORKER OR ADMIN)
-  const userRole = localStorage.getItem('user_role');
-  const isWorker = userRole === 'QA_Hub' || userRole === 'Production_Hub' || userRole === 'Maintenance_Hub';
+  const userRole = localStorage.getItem("user_role");
+
+  const userGroups = JSON.parse(
+    localStorage.getItem("user_groups") || "[]"
+  );
+
+  const hasDashboardAccess =
+    userRole === "Admin" ||
+    userGroups.includes("Dashboard_Users");
 
   // Trigger entrance animation when component mounts
   useEffect(() => {
@@ -132,7 +139,7 @@ const Dashboard = ({ onLogout }) => {
         width: width
       });
     };
-    
+
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -143,19 +150,19 @@ const Dashboard = ({ onLogout }) => {
     const now = new Date();
     const nextHour = new Date(now.getTime());
     nextHour.setMinutes(59, 59, 999);
-    
+
     const timeDiff = nextHour.getTime() - now.getTime();
     const hours = Math.floor(timeDiff / (1000 * 60 * 60));
     const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
-    
+
     setNextRefresh(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
   }, []);
 
   useEffect(() => {
     updateRefreshCountdown();
     const interval = setInterval(updateRefreshCountdown, 1000);
-    
+
     return () => clearInterval(interval);
   }, [updateRefreshCountdown]);
 
@@ -176,7 +183,7 @@ const Dashboard = ({ onLogout }) => {
   const fetchHourlyDashboardData = useCallback(async () => {
     try {
       console.log('🔄 Hourly Auto-Refresh - Fetching Dashboard Data');
-      
+
       const data = await getDashboardData({
         date: selectedDate,
         plant: selectedPlant,
@@ -184,19 +191,19 @@ const Dashboard = ({ onLogout }) => {
         hour: selectedHour,
         machine: selectedMachine
       });
-      
+
       if (data?.success && data.dashboard_data) {
         const dashboardData = data.dashboard_data;
-        
+
         setTotalProduction(dashboardData.total_production || 0);
-        
+
         const currentRunning = selectedPlant === 'plant1_data' ? 41 : 17;
         const currentTotal = selectedPlant === 'plant1_data' ? 57 : 26;
-        
+
         const idleCount = Math.floor((currentTotal - currentRunning) * 0.6);
         const maintenanceCount = Math.floor((currentTotal - currentRunning) * 0.2);
         const offlineCount = Math.max(0, currentTotal - currentRunning - idleCount - maintenanceCount);
-        
+
         setEfficiencyData({
           labels: ['Running', 'Idle', 'Maintenance', 'Offline'],
           datasets: [{
@@ -205,7 +212,7 @@ const Dashboard = ({ onLogout }) => {
             borderWidth: 0
           }]
         });
-        
+
         console.log('✅ Hourly Refresh Complete!');
         return true;
       }
@@ -222,7 +229,7 @@ const Dashboard = ({ onLogout }) => {
 
     const now = new Date();
     const msUntilNextHour = ((60 - now.getMinutes()) * 60 * 1000) - (now.getSeconds() * 1000) - now.getMilliseconds();
-    
+
     const hourlyTimer = setTimeout(async () => {
       await fetchHourlyDashboardData();
       hourlyPollRef.current = setInterval(async () => {
@@ -250,18 +257,18 @@ const Dashboard = ({ onLogout }) => {
   // Manual refresh handler with animation
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    
+
     await Promise.all([
       fetchRunningMachines(),
       fetchHourlyDashboardData()
     ]);
-    
+
     setTimeout(() => setIsRefreshing(false), 1500);
   };
 
   // Generate available hours
   useEffect(() => {
-    const hours = Array.from({length: 24}, (_, i) => ({
+    const hours = Array.from({ length: 24 }, (_, i) => ({
       value: i.toString().padStart(2, '0'),
       label: `${i.toString().padStart(2, '0')}:00`
     }));
@@ -270,15 +277,15 @@ const Dashboard = ({ onLogout }) => {
 
   // Generate machines based on plant
   useEffect(() => {
-    const machines = selectedPlant === 'plant1_data' 
-      ? Array.from({length: 57}, (_, i) => ({
-          value: (i + 1).toString(),
-          label: `Machine ${(i + 1).toString().padStart(2, '0')}`
-        }))
-      : Array.from({length: 26}, (_, i) => ({
-          value: (i + 1).toString(),
-          label: `Machine ${(i + 1).toString().padStart(2, '0')}`
-        }));
+    const machines = selectedPlant === 'plant1_data'
+      ? Array.from({ length: 57 }, (_, i) => ({
+        value: (i + 1).toString(),
+        label: `Machine ${(i + 1).toString().padStart(2, '0')}`
+      }))
+      : Array.from({ length: 26 }, (_, i) => ({
+        value: (i + 1).toString(),
+        label: `Machine ${(i + 1).toString().padStart(2, '0')}`
+      }));
     setAvailableMachines(machines);
   }, [selectedPlant]);
 
@@ -295,9 +302,9 @@ const Dashboard = ({ onLogout }) => {
 
   // ✅ MOCK DATA GENERATORS
   const generateMockHourlyData = useCallback(() => {
-    const hours = Array.from({length: 24}, (_, i) => i);
+    const hours = Array.from({ length: 24 }, (_, i) => i);
     const baseProduction = selectedPlant === 'plant1_data' ? 800 : 750;
-    
+
     const productionValues = hours.map(hour => {
       let production = baseProduction;
       if (hour >= 8 && hour <= 16) production += Math.random() * 300 + 200;
@@ -305,7 +312,7 @@ const Dashboard = ({ onLogout }) => {
       else production += Math.random() * 100 + 50;
       return Math.floor(production);
     });
-    
+
     setHourlyProductionData({
       labels: hours.map(h => `${h.toString().padStart(2, '0')}:00`),
       datasets: [{
@@ -323,9 +330,9 @@ const Dashboard = ({ onLogout }) => {
 
   const generateMockMachineData = useCallback(() => {
     const machineCount = selectedPlant === 'plant1_data' ? (screenSize.isMobile ? 8 : 15) : (screenSize.isMobile ? 6 : 12);
-    const machineNames = Array.from({length: machineCount}, (_, i) => `M${(i+1).toString().padStart(2, '0')}`);
+    const machineNames = Array.from({ length: machineCount }, (_, i) => `M${(i + 1).toString().padStart(2, '0')}`);
     const machineProduction = machineNames.map(() => Math.floor(Math.random() * 800 + 200));
-    
+
     setMachineWiseData({
       labels: machineNames,
       datasets: [{
@@ -348,11 +355,11 @@ const Dashboard = ({ onLogout }) => {
   const generateEfficiencyDataFromReal = useCallback(() => {
     const currentRunning = selectedPlant === 'plant1_data' ? 41 : 17;
     const currentTotal = selectedPlant === 'plant1_data' ? 57 : 26;
-    
+
     const idleCount = Math.floor((currentTotal - currentRunning) * 0.6);
     const maintenanceCount = Math.floor((currentTotal - currentRunning) * 0.2);
     const offlineCount = Math.max(0, currentTotal - currentRunning - idleCount - maintenanceCount);
-    
+
     setEfficiencyData({
       labels: ['Running', 'Idle', 'Maintenance', 'Offline'],
       datasets: [{
@@ -367,9 +374,9 @@ const Dashboard = ({ onLogout }) => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        console.log('🔄 Filter Change - Fetching data:', {selectedDate, selectedPlant, selectedShift});
+        console.log('🔄 Filter Change - Fetching data:', { selectedDate, selectedPlant, selectedShift });
         setLoading(true);
-        
+
         if (selectedPlant === 'plant1_data') {
           setRunningMachines(41);
           setTotalMachines(57);
@@ -385,12 +392,12 @@ const Dashboard = ({ onLogout }) => {
           hour: selectedHour,
           machine: selectedMachine
         });
-        
+
         if (data?.success && data.dashboard_data) {
           const dashboardData = data.dashboard_data;
-          
+
           setTotalProduction(dashboardData.total_production || 0);
-          
+
           if (dashboardData.hourly_production?.data) {
             setHourlyProductionData({
               labels: dashboardData.hourly_production.labels || Array(24).fill(''),
@@ -407,13 +414,13 @@ const Dashboard = ({ onLogout }) => {
           } else {
             generateMockHourlyData();
           }
-          
+
           if (dashboardData.machine_production?.data) {
             setMachineWiseData(dashboardData.machine_production);
           } else {
             generateMockMachineData();
           }
-          
+
           generateEfficiencyDataFromReal();
           console.log('✅ Filter data loaded!');
         } else {
@@ -432,7 +439,7 @@ const Dashboard = ({ onLogout }) => {
         setLoading(false);
       }
     };
-    
+
     fetchDashboardData();
   }, [selectedDate, selectedShift, selectedPlant, selectedHour, selectedMachine, generateMockHourlyData, generateMockMachineData, generateEfficiencyDataFromReal, screenSize.isMobile]);
 
@@ -458,25 +465,25 @@ const Dashboard = ({ onLogout }) => {
         }
       },
       scales: {
-        x: { 
-          ticks: { 
-            color: '#94a3b8', 
+        x: {
+          ticks: {
+            color: '#94a3b8',
             font: { size: screenSize.isMobile ? 8 : 11 },
             maxRotation: screenSize.isMobile ? 45 : 0,
             minRotation: screenSize.isMobile ? 45 : 0
-          }, 
-          grid: { color: 'rgba(255,255,255,0.08)' } 
+          },
+          grid: { color: 'rgba(255,255,255,0.08)' }
         },
-        y: { 
-          ticks: { 
-            color: '#94a3b8', 
-            font: { size: screenSize.isMobile ? 8 : 11 } 
-          }, 
-          grid: { color: 'rgba(255,255,255,0.08)' } 
+        y: {
+          ticks: {
+            color: '#94a3b8',
+            font: { size: screenSize.isMobile ? 8 : 11 }
+          },
+          grid: { color: 'rgba(255,255,255,0.08)' }
         }
       }
     };
-    
+
     return baseOptions;
   };
 
@@ -677,7 +684,7 @@ const Dashboard = ({ onLogout }) => {
                   height: Math.random() * (screenSize.isMobile ? 100 : 200) + (screenSize.isMobile ? 25 : 50),
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
-                  background: i % 2 === 0 
+                  background: i % 2 === 0
                     ? 'radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, transparent 70%)'
                     : 'radial-gradient(circle, rgba(251, 191, 36, 0.08) 0%, transparent 70%)',
                 }}
@@ -690,9 +697,9 @@ const Dashboard = ({ onLogout }) => {
           <Sidebar onLogout={onLogout} />
 
           <div className="flex-1 overflow-auto relative z-10 mt-5">
-            
+
             {/* 🔥 BLUR OVERLAY FOR WORKERS (Only covers main content) 🔥 */}
-            {isWorker && (
+            {!hasDashboardAccess && (
               <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f172a]/70 backdrop-blur-md rounded-l-3xl">
                 <div className="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-md border border-red-100">
                   <h1 className="text-3xl font-bold text-red-600 mb-2">Access Restricted 🚫</h1>
@@ -712,12 +719,12 @@ const Dashboard = ({ onLogout }) => {
             )}
 
             {/* 🔥 MAIN CONTENT (Blurred if Worker) 🔥 */}
-            <div className={`max-w-[1600px] mx-auto ${getContainerPadding()} ${isWorker ? "blur-md pointer-events-none opacity-40 select-none" : ""}`}>
+            <div className={`max-w-[1600px] mx-auto ${getContainerPadding()} ${!hasDashboardAccess ? "blur-md pointer-events-none opacity-40 select-none" : ""}`}>
               {/* HEADER */}
               <motion.div variants={itemVariants} className={`flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 ${getHeaderMargin()}`}>
                 <motion.div variants={headerVariants}>
                   <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3 md:gap-4 mb-2">
-                    <motion.div 
+                    <motion.div
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       transition={{ type: "spring", stiffness: 300 }}
                       className={`${screenSize.isMobile ? 'w-10 h-10' : 'w-12 h-12'} rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30`}
@@ -727,14 +734,14 @@ const Dashboard = ({ onLogout }) => {
                     <div>
                       <h1 className={`${getTitleSize()} font-bold bg-gradient-to-r from-cyan-400 via-white to-yellow-400 bg-clip-text text-transparent relative inline-block`}>
                         AtomOne Analytics Hub
-                        <motion.div 
-                          className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-cyan-500 to-yellow-500 rounded-full" 
-                          initial={{ width: 0 }} 
-                          animate={{ width: '100%' }} 
-                          transition={{ delay: 0.5, duration: 0.8 }} 
+                        <motion.div
+                          className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-cyan-500 to-yellow-500 rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: '100%' }}
+                          transition={{ delay: 0.5, duration: 0.8 }}
                         />
                       </h1>
-                      <motion.p 
+                      <motion.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.6 }}
@@ -744,14 +751,14 @@ const Dashboard = ({ onLogout }) => {
                       </motion.p>
                     </div>
                   </motion.div>
-                  
-                  <motion.div 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
-                    transition={{ delay: 0.7 }} 
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.7 }}
                     className="flex flex-wrap items-center gap-2 md:gap-3 text-slate-400 text-xs md:text-sm"
                   >
-                    <motion.div 
+                    <motion.div
                       whileHover={{ scale: 1.05 }}
                       className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30"
                     >
@@ -759,7 +766,7 @@ const Dashboard = ({ onLogout }) => {
                       <span className="text-green-400 font-semibold">Live</span>
                     </motion.div>
                     <Separator orientation="vertical" className="h-4 md:h-6" />
-                    <motion.div 
+                    <motion.div
                       whileHover={{ scale: 1.05 }}
                       className="flex items-center gap-1 md:gap-2"
                     >
@@ -767,7 +774,7 @@ const Dashboard = ({ onLogout }) => {
                       <span className="font-mono text-cyan-400 text-xs md:text-sm">{currentTime.toLocaleTimeString()}</span>
                     </motion.div>
                     <Separator orientation="vertical" className="h-4 md:h-6" />
-                    <motion.div 
+                    <motion.div
                       whileHover={{ scale: 1.05 }}
                       className="flex items-center gap-1 md:gap-2"
                     >
@@ -775,7 +782,7 @@ const Dashboard = ({ onLogout }) => {
                       <span className="text-xs md:text-sm">{currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                     </motion.div>
                     <Separator orientation="vertical" className="h-4 md:h-6" />
-                    <motion.div 
+                    <motion.div
                       whileHover={{ scale: 1.05 }}
                       className="flex items-center gap-1 md:gap-2"
                     >
@@ -783,7 +790,7 @@ const Dashboard = ({ onLogout }) => {
                       <span className="text-cyan-400 font-semibold text-xs md:text-sm">{selectedPlant === 'plant1_data' ? 'Plant 1' : 'Plant 2'}</span>
                     </motion.div>
                     <Separator orientation="vertical" className="h-4 md:h-6" />
-                    <motion.div 
+                    <motion.div
                       whileHover={{ scale: 1.05 }}
                       className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-full"
                     >
@@ -793,7 +800,7 @@ const Dashboard = ({ onLogout }) => {
                   </motion.div>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   variants={buttonVariants}
                   className="flex flex-wrap items-center gap-2"
                 >
@@ -837,7 +844,7 @@ const Dashboard = ({ onLogout }) => {
               >
                 <Card className="backdrop-blur-xl bg-gradient-to-br from-[#1e293b]/80 to-[#1e293b]/60 border-cyan-500/30 p-4 md:p-6">
                   <div className="flex items-center gap-2 mb-3 md:mb-4">
-                    <motion.h3 
+                    <motion.h3
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 }}
@@ -845,7 +852,7 @@ const Dashboard = ({ onLogout }) => {
                     >
                       Data Filters
                     </motion.h3>
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, scale: 0 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.5, type: "spring" }}
@@ -863,11 +870,11 @@ const Dashboard = ({ onLogout }) => {
                         transition={{ delay: 0.6 + idx * 0.05 }}
                       >
                         <label className="text-slate-300 text-xs md:text-sm block mb-1 md:mb-2">{label}</label>
-                        <select 
-                          value={label === 'Plant' ? selectedPlant : 
-                                 label === 'Date' ? selectedDate :
-                                 label === 'Shift' ? selectedShift :
-                                 label === 'Hour' ? selectedHour : selectedMachine}
+                        <select
+                          value={label === 'Plant' ? selectedPlant :
+                            label === 'Date' ? selectedDate :
+                              label === 'Shift' ? selectedShift :
+                                label === 'Hour' ? selectedHour : selectedMachine}
                           onChange={(e) => {
                             if (label === 'Plant') setSelectedPlant(e.target.value);
                             else if (label === 'Date') setSelectedDate(e.target.value);
@@ -925,7 +932,7 @@ const Dashboard = ({ onLogout }) => {
                     <div className="flex items-start justify-between mb-3 md:mb-4">
                       <div>
                         <p className="text-slate-400 text-xs md:text-sm mb-1">Total Machines</p>
-                        <motion.span 
+                        <motion.span
                           className="text-2xl md:text-3xl font-bold text-cyan-400"
                           initial={{ opacity: 0, scale: 0.5 }}
                           animate={{ opacity: 1, scale: 1 }}
@@ -934,7 +941,7 @@ const Dashboard = ({ onLogout }) => {
                           {totalMachines}
                         </motion.span>
                       </div>
-                      <motion.div 
+                      <motion.div
                         whileHover={{ scale: 1.1, rotate: 5 }}
                         className={`${screenSize.isMobile ? 'w-10 h-10' : 'w-12 h-12'} rounded-xl bg-cyan-500/20 flex items-center justify-center relative`}
                       >
@@ -958,7 +965,7 @@ const Dashboard = ({ onLogout }) => {
                           Running Machines
                           <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-pulse"></span>
                         </p>
-                        <motion.span 
+                        <motion.span
                           className="text-2xl md:text-3xl font-bold text-green-400"
                           key={runningMachines}
                           initial={{ opacity: 0, scale: 0.5 }}
@@ -968,7 +975,7 @@ const Dashboard = ({ onLogout }) => {
                           {runningMachines}
                         </motion.span>
                       </div>
-                      <motion.div 
+                      <motion.div
                         whileHover={{ scale: 1.1, rotate: -5 }}
                         className={`${screenSize.isMobile ? 'w-10 h-10' : 'w-12 h-12'} rounded-xl bg-green-500/20 flex items-center justify-center relative`}
                       >
@@ -977,10 +984,10 @@ const Dashboard = ({ onLogout }) => {
                       </motion.div>
                     </div>
                     <div className="h-1.5 md:h-2 bg-[#0f172a]/50 rounded-full overflow-hidden">
-                      <motion.div 
-                        className="h-full bg-gradient-to-r from-green-500 to-green-400" 
-                        initial={{ width: 0 }} 
-                        animate={{ width: `${Math.max(0, (runningMachines / Math.max(1, totalMachines)) * 100)}%` }} 
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-green-500 to-green-400"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.max(0, (runningMachines / Math.max(1, totalMachines)) * 100)}%` }}
                         transition={{ duration: 0.8, delay: 1 }}
                       />
                     </div>
@@ -996,7 +1003,7 @@ const Dashboard = ({ onLogout }) => {
                     <div className="flex items-start justify-between mb-3 md:mb-4">
                       <div>
                         <p className="text-slate-400 text-xs md:text-sm mb-1">Production</p>
-                        <motion.span 
+                        <motion.span
                           className="text-2xl md:text-3xl font-bold text-cyan-400"
                           initial={{ opacity: 0, scale: 0.5 }}
                           animate={{ opacity: 1, scale: 1 }}
@@ -1005,7 +1012,7 @@ const Dashboard = ({ onLogout }) => {
                           {totalProduction.toLocaleString()}
                         </motion.span>
                       </div>
-                      <motion.div 
+                      <motion.div
                         whileHover={{ scale: 1.1 }}
                         className={`${screenSize.isMobile ? 'w-10 h-10' : 'w-12 h-12'} rounded-xl bg-cyan-500/20 flex items-center justify-center relative`}
                       >
@@ -1052,15 +1059,15 @@ const Dashboard = ({ onLogout }) => {
                     </h3>
                     <div style={{ height: getChartHeight() }}>
                       {efficiencyData.labels?.length > 0 ? (
-                        <Doughnut 
-                          data={efficiencyData} 
-                          options={{ 
-                            ...chartOptions, 
-                            plugins: { 
-                              ...chartOptions.plugins, 
-                              legend: { ...chartOptions.plugins.legend, position: 'bottom' } 
-                            } 
-                          }} 
+                        <Doughnut
+                          data={efficiencyData}
+                          options={{
+                            ...chartOptions,
+                            plugins: {
+                              ...chartOptions.plugins,
+                              legend: { ...chartOptions.plugins.legend, position: 'bottom' }
+                            }
+                          }}
                         />
                       ) : (
                         <div className="flex items-center justify-center h-full text-slate-500 text-sm">Loading chart data...</div>
