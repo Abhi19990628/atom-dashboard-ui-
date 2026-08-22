@@ -1731,7 +1731,7 @@ import { useUser } from "../../src/context/UserContext";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8000";
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:9000";
 
 export default function Sidebar({ onLogout }) {
   const navigate = useNavigate();
@@ -1905,7 +1905,7 @@ export default function Sidebar({ onLogout }) {
       return userGroups.includes("Dashboard_Users");
     }
 
-    // Plant 1 access through Django Group
+    //plant 1 access through Django Group
     if (path === "/plant1-live") {
       return userGroups.includes("Plant_1_User");
     }
@@ -2786,7 +2786,7 @@ export default function Sidebar({ onLogout }) {
       )}
 
       {/* Custom Scrollbar Styles */}
-      <style jsx>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 3px;
         }

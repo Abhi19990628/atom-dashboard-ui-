@@ -155,7 +155,12 @@ function App() {
   });
 
   useEffect(() => {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
+    // Do not register service worker during localhost development
+    if (
+      process.env.NODE_ENV === "production" &&
+      "serviceWorker" in navigator &&
+      "PushManager" in window
+    ) {
       navigator.serviceWorker
         .register("/sw.js")
         .then(function (registration) {

@@ -1055,7 +1055,7 @@ export default function Auth({ onLogin }) {
     setErrorMessage("");
 
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
+      const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:9000";
       const response = await fetch(`${apiUrl}/api/request-reset-otp/`, {
         method: "POST",
         headers: {
@@ -1094,7 +1094,7 @@ export default function Auth({ onLogin }) {
     }
 
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
+      const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:9000";
       const response = await fetch(`${apiUrl}/api/verify-reset-otp/`, {
         method: "POST",
         headers: {
@@ -1158,10 +1158,10 @@ export default function Auth({ onLogin }) {
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-      const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
-
+      const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:9000";
+      console.log("🔐 LOGIN API URL:", apiUrl);
       const response = await fetch(`${apiUrl}/api/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1244,15 +1244,19 @@ export default function Auth({ onLogin }) {
         );
       }
     } catch (error) {
-      if (username === "Admin" && password === "admin") {
-        loginAsDemoAdmin();
-      } else {
-        localStorage.setItem("access_token", "demo_blocked_token");
-        localStorage.setItem("user_role", "Blocked");
-        localStorage.setItem("username", username);
-        if (onLogin) onLogin();
-        navigate("/404-page-not-found");
-      }
+      console.error("❌ Login error:", error);
+
+      setErrorMessage(
+        "Unable to connect to backend. Please check backend server."
+      );
+
+      // Do NOT create fake login
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("user_role");
+      localStorage.removeItem("user_groups");
+
+      // Stay on login page
     } finally {
       setIsLoading(false);
     }
