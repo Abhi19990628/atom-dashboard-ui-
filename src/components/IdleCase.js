@@ -108,11 +108,11 @@
 //   // Auto-fill function when machine is selected
 //   const handleMachineChange = async (selectedMachine) => {
 //     setMachine(selectedMachine);
-    
+
 //     if (selectedMachine) {
 //       try {
 //         const response = await axios.get(`http://127.0.0.1:8000/api/machines/${selectedMachine}/auto-fill/`);
-        
+
 //         if (response.data.success) {
 //           setOperator(response.data.operator_name);
 //           setTool(response.data.tool_id);
@@ -131,7 +131,7 @@
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
 //     setLoading(true);
-    
+
 //     const data = {
 //       machine_no: machine,
 //       operator_name: operator,
@@ -141,11 +141,11 @@
 
 //     try {
 //       const response = await axios.post("http://127.0.0.1:8000/api/idle-reports/", data);
-      
+
 //       if (response.data.success) {
 //         setLoading(false);
 //         setShowSuccess(true); // UPDATED: Show success page
-        
+
 //         // UPDATED: Redirect to dashboard after 5 seconds
 //         setTimeout(() => {
 //           navigate("/dashboard");
@@ -253,31 +253,31 @@
 //             0% { transform: scale(0); opacity: 0; }
 //             100% { transform: scale(1); opacity: 1; }
 //           }
-          
+
 //           @keyframes drawCheck {
 //             to { stroke-dashoffset: 0; }
 //           }
-          
+
 //           @keyframes fadeInUp {
 //             0% { opacity: 0; transform: translateY(30px); }
 //             100% { opacity: 1; transform: translateY(0); }
 //           }
-          
+
 //           @keyframes fadeIn {
 //             0% { opacity: 0; }
 //             100% { opacity: 1; }
 //           }
-          
+
 //           @keyframes titleGlow {
 //             0% { opacity: 0; transform: scale(0.8); }
 //             100% { opacity: 1; transform: scale(1); }
 //           }
-          
+
 //           @keyframes fillProgress {
 //             0% { width: 0%; }
 //             100% { width: 100%; }
 //           }
-          
+
 //           @keyframes confettiFall {
 //             0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
 //             100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
@@ -605,7 +605,7 @@
 //           </form>
 //         </div>
 //       </div>
-      
+
 //       {/* Error Toast */}
 //       <div 
 //         id="error-toast" 
@@ -623,13 +623,13 @@
 
 
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Sidebar from './Sidebar';
 
 // ✅ Simple icons
-import { 
+import {
   FaWrench,
   FaCog,
   FaCalendarCheck,
@@ -641,6 +641,7 @@ import {
   FaTools
 } from 'react-icons/fa';
 
+const API_BASE = "http://127.0.0.1:9000/api";
 
 export default function IdleCase({ onLogout }) {
   const navigate = useNavigate();
@@ -651,12 +652,14 @@ export default function IdleCase({ onLogout }) {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-
+  const [pendingEvents, setPendingEvents] = useState([]);
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [eventsLoading, setEventsLoading] = useState(false);
 
   // Plant-wise machine mapping
   const plantMachines = {
-    "1": Array.from({length: 57}, (_, i) => i + 1),
-    "2": Array.from({length: 26}, (_, i) => i + 1)
+    "1": Array.from({ length: 57 }, (_, i) => i + 1),
+    "2": Array.from({ length: 26 }, (_, i) => i + 1)
   };
 
 
@@ -752,31 +755,197 @@ export default function IdleCase({ onLogout }) {
   // Auto-fill function
   const handleMachineChange = async (selectedMachine) => {
     setMachine(selectedMachine);
-    
-    if (selectedMachine && plant) {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/machines/${selectedMachine}/auto-fill/`);
-        
-        if (response.data.success) {
-          setOperator(response.data.operator_name);
-          setTool(response.data.tool_id);
-        } else {
-          setOperator("Auto Operator");
-          setTool("Unknown Tool");
+
+    setPendingEvents([]);
+    setSelectedEventId("");
+
+    if (!selectedMachine || !plant) {
+      return;
+    }
+
+    setEventsLoading(true);
+
+    try {
+      // Get pending Ideal events for selected plant + machine
+      const pendingResponse = await axios.get(
+        `${API_BASE}/ideal-reports/pending/`,
+        {
+          params: {
+            plant: plant,
+            machine_no: selectedMachine,
+          },
         }
-      } catch (error) {
-        console.error('Error fetching auto-fill data:', error);
+      );
+
+      if (pendingResponse.data.success) {
+        const events = pendingResponse.data.pending_reports || [];
+
+        setPendingEvents(events);
+
+        // Automatically select if only one event exists
+        if (events.length === 1) {
+          setSelectedEventId(String(events[0].event_id));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching pending Ideal events:", error);
+
+      setPendingEvents([]);
+      setSelectedEventId("");
+    } finally {
+      setEventsLoading(false);
+    }
+
+    // Existing operator/tool auto-fill
+    try {
+      const response = await axios.get(
+        `${API_BASE}/machines/${selectedMachine}/auto-fill/`
+      );
+
+      if (response.data.success) {
+        setOperator(response.data.operator_name);
+        setTool(response.data.tool_id);
+      } else {
         setOperator("Auto Operator");
         setTool("Unknown Tool");
       }
+    } catch (error) {
+      console.error("Error fetching auto-fill data:", error);
+
+      setOperator("Auto Operator");
+      setTool("Unknown Tool");
     }
   };
 
+  useEffect(() => {
+    if (!plant || !machine) {
+      return;
+    }
+
+    // Local development only.
+    // Production IP will be handled later.
+    const wsPlant =
+      plant === "1" ? "plant1" : "plant2";
+
+    const socket = new WebSocket(
+      `ws://127.0.0.1:9000/ws/${wsPlant}/live/`
+    );
+
+    socket.onopen = () => {
+      console.log(
+        `✅ Ideal Report WebSocket connected: ${wsPlant}`
+      );
+    };
+
+    socket.onmessage = async (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+
+        // Existing consumer may wrap the message.
+        const message =
+          payload.message ||
+          payload.data ||
+          payload;
+
+        // IMPORTANT:
+        // Ignore normal COUNT/machine WebSocket updates.
+        if (
+          message.event_type !==
+          "ideal_report_updated"
+        ) {
+          return;
+        }
+
+        console.log(
+          "📡 IDEAL REPORT UPDATE RECEIVED:",
+          message
+        );
+
+        // If another machine was updated,
+        // this page does not need to refetch.
+        if (
+          String(message.machine_no) !==
+          String(machine)
+        ) {
+          return;
+        }
+
+        // DB remains source of truth.
+        const response = await axios.get(
+          `${API_BASE}/ideal-reports/pending/`,
+          {
+            params: {
+              plant: plant,
+              machine_no: machine,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          const events =
+            response.data.pending_reports || [];
+
+          setPendingEvents(events);
+
+          // If Browser 2 had selected the event
+          // that Browser 1 just submitted,
+          // clear that old selection.
+          setSelectedEventId(
+            (currentEventId) => {
+
+              const stillExists = events.some(
+                (item) =>
+                  String(item.event_id) ===
+                  String(currentEventId)
+              );
+
+              if (stillExists) {
+                return currentEventId;
+              }
+
+              // Auto-select if only one remains.
+              if (events.length === 1) {
+                return String(
+                  events[0].event_id
+                );
+              }
+
+              return "";
+            }
+          );
+        }
+
+      } catch (error) {
+        console.error(
+          "Ideal Report WebSocket handling error:",
+          error
+        );
+      }
+    };
+
+    socket.onerror = (error) => {
+      console.error(
+        "❌ Ideal Report WebSocket error:",
+        error
+      );
+    };
+
+    socket.onclose = () => {
+      console.log(
+        `🔌 Ideal Report WebSocket disconnected: ${wsPlant}`
+      );
+    };
+
+    return () => {
+      socket.close();
+    };
+
+  }, [plant, machine]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     const data = {
       plant_no: plant,
       machine_no: machine,
@@ -787,12 +956,21 @@ export default function IdleCase({ onLogout }) {
 
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/idle-reports/", data);
-      
+      if (!selectedEventId) {
+        setLoading(false);
+        alert("Please select a pending Ideal event.");
+        return;
+      }
+
+      const response = await axios.post(
+        `${API_BASE}/ideal-reports/${selectedEventId}/submit/`,
+        data
+      );
+
       if (response.data.success) {
         setLoading(false);
         setShowSuccess(true);
-        
+
         setTimeout(() => {
           navigate("/dashboard");
         }, 5000);
@@ -851,9 +1029,9 @@ export default function IdleCase({ onLogout }) {
             <h1 style={successStyles.title}>Report Submitted Successfully!</h1>
             <h2 style={successStyles.subtitle}>Idle Case Recorded</h2>
             <p style={successStyles.description}>
-              <strong style={{color: '#06b6d4'}}>Plant {plant}, Machine {machine}</strong> idle report submitted.
+              <strong style={{ color: '#06b6d4' }}>Plant {plant}, Machine {machine}</strong> idle report submitted.
               <br /><br />
-              Reason: <strong style={{color: '#fbbf24'}}>{reasonOptions.find(r => r.value === reason)?.label}</strong>
+              Reason: <strong style={{ color: '#fbbf24' }}>{reasonOptions.find(r => r.value === reason)?.label}</strong>
               <br /><br />
               Your report has been saved for analysis.
             </p>
@@ -900,19 +1078,19 @@ export default function IdleCase({ onLogout }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#1a202c' }}>
       <Sidebar onLogout={onLogout} />
-      
+
       {/* ✅ BIGGER WIDTH - 700px */}
-      <div style={{ 
-        flex: 1, 
-        display: 'flex', 
-        justifyContent: 'center', 
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        justifyContent: 'center',
         alignItems: 'flex-start',
         padding: '50px 40px',
         minHeight: '100vh',
         overflowY: 'auto'
       }}>
         <div style={{ width: '100%', maxWidth: '700px' }}>
-          
+
           {/* Header */}
           <div style={{
             marginBottom: '35px',
@@ -927,8 +1105,8 @@ export default function IdleCase({ onLogout }) {
             }}>
               Idle Case Reporting
             </h1>
-            <p style={{ 
-              color: '#9ca3af', 
+            <p style={{
+              color: '#9ca3af',
               fontSize: '14px',
               fontWeight: '400'
             }}>
@@ -945,7 +1123,7 @@ export default function IdleCase({ onLogout }) {
           }}>
             <form onSubmit={handleSubmit}>
               <div style={{ display: 'grid', gap: '24px' }}>
-                
+
                 {/* Plant Selection */}
                 <div>
                   <label style={{
@@ -967,6 +1145,9 @@ export default function IdleCase({ onLogout }) {
                       setMachine("");
                       setOperator("Auto Operator");
                       setTool("");
+
+                      setPendingEvents([]);
+                      setSelectedEventId("");
                     }}
                     required
                     style={{
@@ -1039,6 +1220,93 @@ export default function IdleCase({ onLogout }) {
                   </select>
                 </div>
 
+                {/* Pending Ideal Event Selection */}
+                <div>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      color: "#d1d5db",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    <FaExclamationTriangle size={15} color="#9ca3af" />
+                    Pending Ideal Event
+                  </label>
+
+                  <select
+                    value={selectedEventId}
+                    onChange={(e) => setSelectedEventId(e.target.value)}
+                    required
+                    disabled={
+                      !machine ||
+                      eventsLoading ||
+                      pendingEvents.length === 0
+                    }
+                    style={{
+                      width: "100%",
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #4b5563",
+                      borderRadius: "10px",
+                      padding: "13px 16px",
+                      color: "#e5e7eb",
+                      fontSize: "14px",
+                      outline: "none",
+                    }}
+                  >
+                    <option value="">
+                      {eventsLoading
+                        ? "Loading Ideal events..."
+                        : pendingEvents.length === 0
+                          ? "No pending Ideal event"
+                          : "Select Ideal Event"}
+                    </option>
+
+                    {pendingEvents.map((event) => (
+                      <option
+                        key={event.event_id}
+                        value={event.event_id}
+                      >
+                        Event #{event.event_id}
+                        {" - "}
+                        {event.duration_minutes} min
+                        {" - "}
+                        {new Date(event.ideal_start_at).toLocaleTimeString(
+                          "en-IN",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                        {" to "}
+                        {new Date(event.ideal_end_at).toLocaleTimeString(
+                          "en-IN",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </option>
+                    ))}
+                  </select>
+
+                  {pendingEvents.length > 1 && (
+                    <div
+                      style={{
+                        marginTop: "8px",
+                        color: "#fbbf24",
+                        fontSize: "13px",
+                      }}
+                    >
+                      {pendingEvents.length} pending Ideal events found.
+                      Select the exact event you want to submit.
+                    </div>
+                  )}
+                </div>
+
                 {/* Operator - Auto-filled */}
                 <div>
                   <label style={{
@@ -1055,17 +1323,18 @@ export default function IdleCase({ onLogout }) {
                   </label>
                   <input
                     value={operator}
-                    readOnly
+                    onChange={(e) => setOperator(e.target.value)}
+                    placeholder="Enter Operator Name"
                     style={{
                       width: '100%',
-                      backgroundColor: '#4b5563',
+                      backgroundColor: '#1f2937',
                       border: '1px solid #4b5563',
                       borderRadius: '10px',
                       padding: '13px 16px',
-                      color: '#d1d5db',
+                      color: '#e5e7eb',
                       fontSize: '14px',
                       outline: 'none',
-                      cursor: 'not-allowed'
+                      cursor: 'text'
                     }}
                   />
                 </div>
@@ -1086,18 +1355,18 @@ export default function IdleCase({ onLogout }) {
                   </label>
                   <input
                     value={tool}
-                    readOnly
-                    placeholder="Auto-filled from database"
+                    onChange={(e) => setTool(e.target.value)}
+                    placeholder="Enter Tool Name"
                     style={{
                       width: '100%',
-                      backgroundColor: '#4b5563',
+                      backgroundColor: '#1f2937',
                       border: '1px solid #4b5563',
                       borderRadius: '10px',
                       padding: '13px 16px',
-                      color: '#d1d5db',
+                      color: '#e5e7eb',
                       fontSize: '14px',
                       outline: 'none',
-                      cursor: 'not-allowed'
+                      cursor: 'text'
                     }}
                   />
                 </div>
@@ -1120,7 +1389,7 @@ export default function IdleCase({ onLogout }) {
                     {reasonOptions.map((option) => {
                       const Icon = option.icon;
                       const isSelected = reason === option.value;
-                      
+
                       return (
                         <div
                           key={option.value}
@@ -1185,11 +1454,16 @@ export default function IdleCase({ onLogout }) {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading || !machine || !reason}
+                disabled={
+                  loading ||
+                  !machine ||
+                  !selectedEventId ||
+                  !reason
+                }
                 style={{
                   width: '100%',
-                  background: loading || !machine || !reason 
-                    ? '#4b5563' 
+                  background: loading || !machine || !reason
+                    ? '#4b5563'
                     : '#06b6d4',
                   border: 'none',
                   borderRadius: '10px',

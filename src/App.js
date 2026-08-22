@@ -155,7 +155,12 @@ function App() {
   });
 
   useEffect(() => {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
+    // Do not register service worker during localhost development
+    if (
+      process.env.NODE_ENV === "production" &&
+      "serviceWorker" in navigator &&
+      "PushManager" in window
+    ) {
       navigator.serviceWorker
         .register("/sw.js")
         .then(function (registration) {
@@ -382,7 +387,7 @@ function App() {
             <Route
               path="/plant1-live"
               element={
-                <ProtectedRoute allowedRoles={["Plant_1_User"]}>
+                <ProtectedRoute allowedGroup="Plant_1_User">
                   <Plant1Live onLogout={handleLogout} />
                 </ProtectedRoute>
               }
