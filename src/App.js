@@ -382,7 +382,7 @@ function App() {
             <Route
               path="/plant1-live"
               element={
-                <ProtectedRoute allowedRoles={["Plant_1_User"]}>
+                <ProtectedRoute allowedGroup="Plant_1_User">
                   <Plant1Live onLogout={handleLogout} />
                 </ProtectedRoute>
               }
