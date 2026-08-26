@@ -208,7 +208,7 @@ html[data-theme="light"] .attendance-layout {
     margin-bottom: 18px;
     padding: 14px;
     display: grid;
-    grid-template-columns: minmax(260px, 1.6fr) minmax(145px, .7fr) minmax(145px, .7fr) minmax(170px, .8fr);
+    grid-template-columns: minmax(240px, 1.4fr) minmax(130px, .7fr) minmax(130px, .7fr) minmax(140px, .7fr) minmax(160px, .8fr);
     gap: 12px;
     border: 1px solid var(--att-border);
     border-radius: 12px;
@@ -340,7 +340,7 @@ html[data-theme="light"] .attendance-filter-field option {
 
 .attendance-table {
     width: 100%;
-    min-width: 1120px;
+    min-width: 1380px;
     border-collapse: collapse;
 }
 
@@ -606,4 +606,327 @@ html[data-theme="light"] .attendance-filter-field option {
         align-items: flex-start;
         flex-direction: column;
     }
+}
+/* ==========================================================
+   Extra attendance statuses from real SQL Server rules
+   ========================================================== */
+
+.att-status-gate-pass {
+    color: #c084fc;
+    background: rgba(139, 92, 246, .15);
+}
+
+.att-status-half-day {
+    color: #fbbf24;
+    background: rgba(245, 158, 11, .14);
+}
+
+.att-status-holiday {
+    color: #fbbf24;
+    background: rgba(245, 158, 11, .14);
+}
+
+.att-status-week-off,
+.att-status-weekoff {
+    color: var(--att-muted);
+    background: rgba(148, 163, 184, .12);
+}
+
+/* ==========================================================
+   MODERN UI POLISH V3 - Attendance Dashboard
+   Same theme, cleaner premium look
+   ========================================================== */
+
+.attendance-layout {
+    --att-bg: #07111d;
+    --att-surface: rgba(18, 29, 47, .92);
+    --att-surface-2: rgba(23, 36, 56, .88);
+    --att-border: rgba(125, 211, 252, .14);
+    --att-text: #f8fafc;
+    --att-muted: #91a7bd;
+    --att-cyan: #22d3ee;
+    --att-green: #4ade80;
+    --att-red: #fb7185;
+    --att-orange: #fbbf24;
+    --att-purple: #a78bfa;
+    background:
+        radial-gradient(circle at 9% 0%, rgba(34, 211, 238, .10), transparent 24%),
+        radial-gradient(circle at 92% 4%, rgba(96, 165, 250, .08), transparent 32%),
+        linear-gradient(180deg, #07111d 0%, #0b1624 52%, #08111d 100%);
+}
+
+.attendance-main {
+    padding: 30px 32px 38px;
+}
+
+.attendance-title-icon,
+.attendance-stat-card,
+.attendance-filter-panel,
+.attendance-table-card,
+.attendance-plant-control {
+    border-color: var(--att-border);
+    background:
+        linear-gradient(145deg, rgba(34, 211, 238, .045), transparent 38%),
+        linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01)),
+        var(--att-surface);
+    box-shadow:
+        0 18px 50px rgba(0, 0, 0, .20),
+        inset 0 1px 0 rgba(255,255,255,.04);
+    backdrop-filter: blur(12px);
+}
+
+.attendance-title-icon {
+    border: 1px solid rgba(34, 211, 238, .22);
+    background: linear-gradient(135deg, #0891b2, #22d3ee);
+    box-shadow: 0 12px 34px rgba(34, 211, 238, .18);
+}
+
+.attendance-title-group h1 {
+    font-weight: 900;
+    letter-spacing: -.8px;
+}
+
+.attendance-plant-control,
+.attendance-filter-panel,
+.attendance-table-card,
+.attendance-stat-card {
+    border-radius: 16px;
+}
+
+.attendance-segmented-control {
+    border-color: rgba(125, 211, 252, .12);
+    background: rgba(15, 23, 42, .38);
+}
+
+.attendance-segmented-control button {
+    border-radius: 9px;
+    font-weight: 900;
+    letter-spacing: .15px;
+}
+
+.attendance-segmented-control button.active {
+    background: linear-gradient(135deg, #0891b2, #22d3ee);
+    color: #061523;
+}
+
+.attendance-stats-grid {
+    gap: 16px;
+}
+
+.attendance-stat-card {
+    min-height: 132px;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.attendance-stat-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(34, 211, 238, .25);
+    box-shadow: 0 22px 56px rgba(0, 0, 0, .26);
+}
+
+.attendance-stat-icon {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.attendance-stat-card h2 {
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: -.7px;
+}
+
+.attendance-filter-panel {
+    grid-template-columns: minmax(260px, 1.5fr) minmax(130px, .72fr) minmax(130px, .72fr) minmax(150px, .8fr) minmax(170px, .85fr);
+    padding: 16px;
+}
+
+.attendance-search,
+.attendance-filter-field select,
+.attendance-date-input {
+    border-color: rgba(125, 211, 252, .12);
+    background: rgba(15, 23, 42, .36);
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.attendance-search:focus-within,
+.attendance-filter-field select:focus,
+.attendance-date-input:focus-within {
+    border-color: rgba(34, 211, 238, .42);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, .07);
+}
+
+.attendance-filter-field label {
+    color: #9fb3c9;
+    letter-spacing: .28px;
+    text-transform: uppercase;
+}
+
+.attendance-table-title {
+    border-bottom: 1px solid rgba(125, 211, 252, .09);
+}
+
+.attendance-table {
+    min-width: 1400px;
+}
+
+.attendance-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 15px 14px;
+    background: #111f31;
+    color: #bdd1e4;
+    font-weight: 900;
+    letter-spacing: .22px;
+    text-transform: uppercase;
+}
+
+.attendance-table td {
+    padding: 13px 14px;
+}
+
+.attendance-table tbody tr {
+    transition: background .16s ease, transform .16s ease;
+}
+
+.attendance-table tbody tr:hover {
+    background: rgba(34, 211, 238, .055);
+}
+
+.attendance-employee-button img {
+    border-color: rgba(34, 211, 238, .30);
+    box-shadow: 0 0 0 4px rgba(34, 211, 238, .045);
+}
+
+.attendance-status {
+    border-radius: 999px;
+    font-weight: 900;
+    letter-spacing: .15px;
+}
+
+.attendance-percentage-track {
+    height: 7px;
+    background: rgba(148, 163, 184, .16);
+}
+
+.attendance-percentage-fill {
+    background: linear-gradient(90deg, #22d3ee, #60a5fa, #4ade80);
+    box-shadow: 0 0 14px rgba(34, 211, 238, .18);
+}
+
+.attendance-view-button {
+    border-radius: 10px;
+    transition: .18s ease;
+}
+
+.attendance-view-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(34, 211, 238, .09);
+}
+
+.attendance-pagination {
+    border-top: 1px solid rgba(125, 211, 252, .09);
+}
+
+.attendance-pagination-controls button {
+    border-radius: 9px;
+}
+
+html[data-theme="light"] .attendance-layout {
+    --att-bg: #f5f8fc;
+    --att-surface: rgba(255,255,255,.96);
+    --att-surface-2: #f8fafc;
+    --att-border: #dbe7f0;
+    --att-text: #0f172a;
+    --att-muted: #64748b;
+    background: linear-gradient(180deg, #f6fafe, #eef4fb);
+}
+
+html[data-theme="light"] .attendance-table th {
+    background: #eef6fb;
+    color: #334155;
+}
+
+/* ==========================================================
+   DASHBOARD ALIGNMENT FIX V4
+   Paste this at the END of AttendanceDashboard.css
+   ========================================================== */
+
+html,
+body {
+    scrollbar-gutter: stable;
+}
+
+.attendance-layout,
+.attendance-layout * {
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(34, 211, 238, .42) rgba(15, 23, 42, .35);
+}
+
+.attendance-layout *::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+.attendance-layout *::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, .42);
+    border-radius: 999px;
+}
+
+.attendance-layout *::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(34, 211, 238, .65), rgba(96, 165, 250, .45));
+    border-radius: 999px;
+}
+
+.attendance-main {
+    width: 100%;
+    min-width: 0;
+    padding: 18px 18px 24px;
+    overflow-x: hidden;
+}
+
+.attendance-header {
+    margin-bottom: 16px;
+}
+
+.attendance-stats-grid {
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.attendance-stat-card {
+    min-height: 108px;
+    padding: 16px;
+}
+
+.attendance-filter-panel {
+    margin-bottom: 14px;
+    grid-template-columns: minmax(240px, 1.35fr) minmax(125px, .72fr) minmax(125px, .72fr) minmax(135px, .72fr) minmax(155px, .8fr);
+    gap: 10px;
+}
+
+.attendance-table-card {
+    overflow: hidden;
+}
+
+.attendance-table-wrapper {
+    max-width: 100%;
+    overflow: auto;
+    scrollbar-gutter: stable;
+}
+
+.attendance-table {
+    min-width: 1360px;
+    table-layout: fixed;
+}
+
+.attendance-table th,
+.attendance-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.attendance-employee-button {
+    min-width: 0;
+    width: 100%;
 }
