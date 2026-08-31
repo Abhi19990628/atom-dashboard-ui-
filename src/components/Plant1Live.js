@@ -1375,12 +1375,80 @@ export default function Plant1Live() {
           // Do NOT treat this as COUNT data
           // =====================================================
           if (liveData.event_type === 'ideal_report_updated') {
+
+            const machineNo = liveData.machine_no;
+
             console.log(
               "📡 IDEAL REPORT UPDATE RECEIVED ON DASHBOARD:",
               liveData
             );
 
-            // Re-read latest backend state.
+
+            if (liveData.report_status === 'SUBMITTED') {
+
+              const submittedState =
+                String(liveData.ideal_mode || '').toUpperCase() === 'OFFLINE'
+                  ? 'OFFLINE'
+                  : 'IDLE';
+
+
+              // IMPORTANT:
+              // Every browser gets Submitted status immediately.
+              setReasonLoggedStates(prev => ({
+                ...prev,
+                [machineNo]: submittedState
+              }));
+
+
+              setMachines(prevMachines =>
+                prevMachines.map(machine =>
+                  sameMachine(
+                    machine.machine_no,
+                    machineNo
+                  )
+                    ? {
+                      ...machine,
+                      has_pending_reason: true,
+                      report_status: 'SUBMITTED',
+                      submitted_by:
+                        liveData.submitted_by || null
+                    }
+                    : machine
+                )
+              );
+
+
+              setSelectedMachine(prev => {
+
+                if (
+                  prev &&
+                  sameMachine(
+                    prev.machine_no,
+                    machineNo
+                  )
+                ) {
+
+                  return {
+                    ...prev,
+                    has_pending_reason: true,
+                    report_status: 'SUBMITTED',
+                    submitted_by:
+                      liveData.submitted_by || null
+                  };
+                }
+
+                return prev;
+              });
+
+
+              window.dispatchEvent(
+                new Event(
+                  "notificationCountRefresh"
+                )
+              );
+            }
+
+
             fetchData();
 
             return;
@@ -1408,10 +1476,7 @@ export default function Plant1Live() {
               liveData.cumulative_count
             );
 
-          console.log(
-            "🔥 LIVE COUNT DATA:",
-            liveData
-          );
+
 
           setMachines(prevMachines => {
             if (prevMachines.length === 0) {
@@ -1596,7 +1661,7 @@ export default function Plant1Live() {
   const checkLunchTime = () => {
     const now = new Date();
     const mins = now.getHours() * 60 + now.getMinutes();
-    return mins >= (12 * 60 + 15) && mins < (12 * 60 + 45);
+    return mins >= (12 * 60 + 45) && mins < (13 * 60 + 15);
   };
 
   const handleMachineClick = (machine) => {
@@ -1691,93 +1756,471 @@ export default function Plant1Live() {
     (idleCategory !== 'Other' || customCategory.trim() !== '') &&
     (idleSubReason !== 'Other' || idleRemarks.trim() !== '');
 
-  const clearNotificationsForMachine = async (machineNo) => {
-    try {
-      const token = localStorage.getItem('access_token');
-      if (!token) return;
-
-      const res = await fetch(`${API_BASE}/api/my-notifications/`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-
-      if (data.success && data.data) {
-        const targetNum = parseInt(String(machineNo).replace(/\D/g, ''), 10);
-
-        const machineNotifs = data.data.filter(n => {
-          if (n.is_read) return false;
-          const dbNumMatch = String(n.machine_no).match(/\d+/);
-          const dbNum = dbNumMatch ? parseInt(dbNumMatch[0], 10) : null;
-          return dbNum === targetNum;
-        });
-
-        await Promise.all(machineNotifs.map(n =>
-          fetch(`${API_BASE}/api/read-notification/${n.id}/`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          })
-        ));
-      }
-    } catch (err) {
-      console.error("Failed to clear notifications automatically", err);
-    }
-  };
-
   const handleReasonSubmit = async () => {
-    if (!idleCategory || !idleSubReason) { alert("Please select both Category and Reason!"); return; }
-    if (idleCategory === 'Other' && !customCategory.trim()) { alert("Please specify the custom category."); return; }
-    if (idleSubReason === 'Other' && !idleRemarks.trim()) { alert("Please provide the exact issue for the 'Other' reason."); return; }
+
+    // ============================================================
+    // VALIDATION
+    // ============================================================
+
+    if (!idleCategory || !idleSubReason) {
+      alert("Please select both Category and Reason!");
+      return;
+    }
+
+    if (
+      idleCategory === "Other" &&
+      !customCategory.trim()
+    ) {
+      alert("Please specify the custom category.");
+      return;
+    }
+
+    if (
+      idleSubReason === "Other" &&
+      !idleRemarks.trim()
+    ) {
+      alert(
+        "Please provide the exact issue for the 'Other' reason."
+      );
+      return;
+    }
+
+    if (!selectedMachine) {
+      alert("Machine not selected.");
+      return;
+    }
+
 
     setIsSubmittingReason(true);
 
-    let finalRemarks = idleRemarks.trim();
-    if (idleCategory === 'Other') {
-      finalRemarks = `[Category: ${customCategory.trim()}] Issue: ${finalRemarks}`;
-    }
+
+    const finalCategory =
+      idleCategory === "Other"
+        ? customCategory.trim()
+        : idleCategory;
+
+
+    let finalRemarks =
+      idleRemarks.trim();
+
 
     try {
-      const token = localStorage.getItem('access_token');
 
-      const response = await fetch(`${API_BASE}/api/log-idle-reason/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          machine_no: selectedMachine.machine_no,
-          plant_no: 1,
-          category: idleCategory,
-          reason: idleSubReason,
-          remarks: finalRemarks,
-          machine_status: selectedMachine.machine_on ? 'ONLINE' : 'OFFLINE',
-          timestamp: new Date().toISOString()
-        })
-      });
+      // ============================================================
+      // 1. TOKEN
+      // ============================================================
 
-      const data = await response.json();
+      const token =
+        localStorage.getItem("access_token");
 
-      // ✅ SESSION / ACCESS TOKEN EXPIRED
-      if (response.status === 401) {
-        console.warn("⚠️ Session expired");
-
-        alert(
-          "Session expired. Please log in again to submit the reason."
+      if (!token) {
+        throw new Error(
+          "Login session not found. Please login again."
         );
-
-        return;
       }
 
-      // ✅ OTHER BACKEND ERRORS
-      if (!response.ok || !data.success) {
-        console.error(
-          "❌ REASON API RESPONSE:",
-          response.status,
-          data
+
+      // ============================================================
+      // 2. CURRENT MACHINE MODE
+      //
+      // machine ON but no production = ONLINE Ideal
+      // machine OFF = OFFLINE Ideal
+      // ============================================================
+
+      const currentMode =
+        selectedMachine.machine_on
+          ? "ONLINE"
+          : "OFFLINE";
+
+
+      const targetMachineNo =
+        parseInt(
+          String(
+            selectedMachine.machine_no
+          ).replace(/\D/g, ""),
+          10
         );
+
+
+      // ============================================================
+      // 3. GET NOTIFICATIONS
+      //
+      // IMPORTANT:
+      // Dashboard old closed pending events ko use nahi karega.
+      //
+      // Current active notification:
+      // created_at = NULL
+      //
+      // Final architecture:
+      // Notification ID == Ideal Event ID
+      // ============================================================
+
+      const notificationResponse =
+        await fetch(
+          `${API_BASE}/api/my-notifications/`,
+          {
+            method: "GET",
+
+            headers: {
+              Authorization:
+                `Bearer ${token}`
+            }
+          }
+        );
+
+
+      const notificationData =
+        await notificationResponse.json();
+
+
+      if (notificationResponse.status === 401) {
+
+        throw new Error(
+          "Session expired. Please login again."
+        );
+      }
+
+
+      if (
+        !notificationResponse.ok ||
+        !notificationData.success
+      ) {
+
+        throw new Error(
+          notificationData.error ||
+          notificationData.message ||
+          "Could not load current notification."
+        );
+      }
+
+
+      const allNotifications =
+        Array.isArray(notificationData.data)
+          ? notificationData.data
+          : [];
+
+
+      console.log(
+        "🔔 ALL MACHINE NOTIFICATIONS:",
+        allNotifications
+      );
+
+
+      // ============================================================
+      // 4. FIND ONLY CURRENT ACTIVE EVENT
+      // ============================================================
+
+      const currentNotifications =
+        allNotifications.filter(
+          (notification) => {
+
+            const machineMatch =
+              String(
+                notification.machine_no || ""
+              ).match(/\d+/);
+
+
+            const notificationMachineNo =
+              machineMatch
+                ? parseInt(
+                  machineMatch[0],
+                  10
+                )
+                : null;
+
+
+            const notificationPlant =
+              String(
+                notification.plant_location ||
+                notification.plant ||
+                ""
+              )
+                .trim()
+                .toLowerCase();
+
+
+            const notificationMode =
+              String(
+                notification.ideal_mode ||
+                ""
+              ).toUpperCase();
+
+
+            const notificationStatus =
+              String(
+                notification.report_status ||
+                notification.status ||
+                ""
+              ).toUpperCase();
+
+
+            const isCurrentActive =
+              notification.idle_ended_at === null ||
+              notification.idle_ended_at === "";
+
+
+            return (
+              notificationMachineNo ===
+              targetMachineNo &&
+
+              notificationPlant ===
+              "plant 1" &&
+
+              notificationMode ===
+              currentMode &&
+
+              (
+                notificationStatus ===
+                "PENDING" ||
+                notificationStatus === ""
+              ) &&
+
+              isCurrentActive
+            );
+          }
+        );
+
+
+      console.log(
+        "🎯 CURRENT ACTIVE NOTIFICATION:",
+        currentNotifications
+      );
+
+
+      // ============================================================
+      // 5. CURRENT EVENT MUST EXIST
+      // ============================================================
+
+      if (
+        currentNotifications.length === 0
+      ) {
+
+        throw new Error(
+          "Current idle/offline event is not ready yet. " +
+          "Please wait until the machine remains idle/offline " +
+          "for at least 3 minutes."
+        );
+      }
+
+
+      // ============================================================
+      // CURRENT EVENT SELECTION
+      // Old stale OPEN events DB me reh sakte hain.
+      // Dashboard always latest PENDING event choose karega.
+      // ============================================================
+
+      const sortedCurrentNotifications =
+        [...currentNotifications].sort((a, b) => {
+
+          const timeA =
+            a.idle_started_at
+              ? new Date(a.idle_started_at).getTime()
+              : 0;
+
+          const timeB =
+            b.idle_started_at
+              ? new Date(b.idle_started_at).getTime()
+              : 0;
+
+          if (timeB !== timeA) {
+            return timeB - timeA;
+          }
+
+          return Number(b.id || 0) - Number(a.id || 0);
+        });
+
+
+      const currentNotification =
+        sortedCurrentNotifications[0];
+
+
+      console.log(
+        "🎯 PLANT 1 SELECTED CURRENT NOTIFICATION:",
+        currentNotification
+      );
+
+
+      if (currentNotifications.length > 1) {
+
+        console.warn(
+          "⚠️ Old active-looking notifications ignored:",
+          currentNotifications.filter(
+            n => n.id !== currentNotification.id
+          )
+        );
+      }
+
+
+      // ============================================================
+      // SAME ID:
+      //
+      // Notification ID == Ideal Event ID
+      // ============================================================
+
+      const eventId =
+        currentNotification.id;
+
+
+      console.log(
+        "✅ CURRENT IDEAL EVENT:",
+        eventId,
+        currentNotification
+      );
+
+
+      // ============================================================
+      // 6. OPERATOR + TOOL AUTO FILL
+      // ============================================================
+
+      let operatorName =
+        "Auto Operator";
+
+      let toolName =
+        "Unknown Tool";
+
+
+      try {
+
+        const autoResponse =
+          await fetch(
+            `${API_BASE}/api/machines/${selectedMachine.machine_no}/auto-fill/?plant=1`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`
+              }
+            }
+          );
+
+
+        const autoData =
+          await autoResponse.json();
+
+
+        if (autoData.success) {
+
+          operatorName =
+            autoData.operator_name ||
+            "Auto Operator";
+
+
+          toolName =
+            autoData.tool_id ||
+            "Unknown Tool";
+        }
+
+      } catch (autoError) {
+
+        console.warn(
+          "⚠️ Auto-fill failed:",
+          autoError
+        );
+      }
+
+
+      // ============================================================
+      // 7. PAYLOAD
+      // ============================================================
+
+      const payload = {
+
+        plant_no: 1,
+
+        machine_no:
+          selectedMachine.machine_no,
+
+        operator_name:
+          operatorName,
+
+        tool_name:
+          toolName,
+
+
+        // IMPORTANT:
+        // Backend field = reason_category
+        reason_category:
+          finalCategory,
+
+
+        specific_reason:
+          idleSubReason,
+
+
+        remark:
+          finalRemarks,
+
+
+        // Notification ID == Ideal ID
+        notification_id:
+          eventId,
+
+
+        ideal_mode:
+          currentMode,
+
+
+        // Tells backend that current OPEN event
+        // is being filled from Plant dashboard.
+        submission_source:
+          "PLANT_DASHBOARD"
+      };
+
+
+      console.log(
+        "📤 CURRENT IDLE REASON SUBMIT:",
+        eventId,
+        payload
+      );
+
+
+      // ============================================================
+      // 8. SUBMIT EXACT IDEAL EVENT
+      // ============================================================
+
+      const response =
+        await fetch(
+          `${API_BASE}/api/ideal-reports/${eventId}/submit/`,
+          {
+            method: "POST",
+
+            headers: {
+
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`
+            },
+
+            body:
+              JSON.stringify(payload)
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      console.log(
+        "📥 IDEAL REASON RESPONSE:",
+        response.status,
+        data
+      );
+
+
+      if (response.status === 401) {
+
+        throw new Error(
+          "Session expired. Please login again."
+        );
+      }
+
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
 
         throw new Error(
           data.error ||
@@ -1787,28 +2230,46 @@ export default function Plant1Live() {
         );
       }
 
-      await clearNotificationsForMachine(
-        selectedMachine.machine_no
-      );
 
-      // Only mark Submitted AFTER backend success
-      // setReasonLoggedStates(prev => ({
-      //   ...prev,
-      //   [selectedMachine.machine_no]:
-      //     selectedMachine.machine_on
-      //       ? 'IDLE'
-      //       : 'OFFLINE'
-      // }));
-
-      setIdleCategory('');
-      setCustomCategory('');
-      setIdleSubReason('');
-      setIdleRemarks('');
+      // ============================================================
+      // 9. SUCCESS
+      // ============================================================
 
       console.log(
-        "✅ Idle reason saved:",
+        "✅ CURRENT IDLE REASON SUBMITTED:",
         data
       );
+
+
+      setReasonLoggedStates(
+        (prev) => ({
+          ...prev,
+
+          [selectedMachine.machine_no]:
+            currentMode === "OFFLINE"
+              ? "OFFLINE"
+              : "IDLE"
+        })
+      );
+
+
+      setIdleCategory("");
+      setCustomCategory("");
+      setIdleSubReason("");
+      setIdleRemarks("");
+
+
+      window.dispatchEvent(
+        new Event(
+          "notificationCountRefresh"
+        )
+      );
+
+
+      // alert(
+      //   "Idle reason submitted successfully."
+      // );
+
 
     } catch (err) {
 
@@ -1817,10 +2278,13 @@ export default function Plant1Live() {
         err
       );
 
+
       alert(
         `Reason could not be saved: ${err.message}`
       );
+
     } finally {
+
       setIsSubmittingReason(false);
     }
   };
@@ -1996,7 +2460,7 @@ export default function Plant1Live() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '15px', flexWrap: 'wrap' }}>
                   <div>
                     <h2 style={{ margin: 0, color: '#f8fafc' }}>Shift Wise History</h2>
-                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>Lunch: 12:15 PM - 12:45 PM</div>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>Lunch: 12:45 PM - 01:15 PM</div>
                   </div>
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                     <select value={historyShift} onChange={(e) => { setHistoryShift(e.target.value); fetchMachineHistory(selectedMachine.machine_no, historyDate, e.target.value); }} style={{ padding: '10px 15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: '#1e293b', color: 'white', fontFamily: 'inherit', fontWeight: 'bold' }}>
