@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, AreaChart, Area
 } from 'recharts';
 import {
-  Factory, Calendar, Settings, TrendingUp, Activity, AlertTriangle,
+  Factory, Calendar, Settings, Activity, AlertTriangle,
   ChevronDown, ChevronRight, Cpu, Gauge, Clock, Zap, Monitor,
   Filter, BarChart3, Play, Square, Power, Terminal,
   LineChart as LineChartIcon, BarChart as BarChartIcon, AreaChart as AreaChartIcon,
-  Server, RefreshCw, Sun, Moon, Radio
+  Server, RefreshCw, Sun, Moon, Radio, Folder
 } from 'lucide-react';
 
 // API Base URL
@@ -51,15 +51,19 @@ const formatTimeHelper = (totalMins) => {
   return `${s}s`;
 };
 
+// 12-hour format logic for 'today' filter
 const getFormatAxisLabel = (dayValue, filter, selDate, selMonth) => {
   if (dayValue === undefined || dayValue === null) return '';
-
-  if (filter === 'today') return `${dayValue}:00`;
-  if (filter === 'yearly') return monthNamesShort[dayValue - 1] || `Month ${dayValue}`;
-
-  if (filter === 'monthly') {
-    return `${dayValue} ${monthNamesShort[selMonth - 1]}`;
+  
+  if (filter === 'today') {
+    const hour = parseInt(dayValue, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const formatHour = hour % 12 || 12; // Convert 0 to 12
+    return `${formatHour}:00 ${ampm}`;
   }
+  
+  if (filter === 'yearly') return monthNamesShort[dayValue - 1] || `Month ${dayValue}`;
+  if (filter === 'monthly') return `${dayValue} ${monthNamesShort[selMonth - 1]}`;
 
   if (filter === 'weekly' && selDate) {
     const [y, m, d] = selDate.split('-');
@@ -73,7 +77,6 @@ const getFormatAxisLabel = (dayValue, filter, selDate, selMonth) => {
     }
     return `${dayValue} ${monthNamesShort[parseInt(m) - 1]}`;
   }
-
   return `Day ${dayValue}`;
 };
 
@@ -88,14 +91,32 @@ const formatChartData = (breakdown, filter, selDate, selMonth) => {
 };
 
 // ============================================
-// DUMMY DATA GENERATORS
+// DUMMY DATA GENERATORS (UPDATED FOR SHIFTS)
 // ============================================
-const generateSampleData = (filter = 'monthly', selDate = '', selMonth = 1) => {
-  let length = 30;
-  if (filter === 'today') length = 24;
-  if (filter === 'weekly') length = 7;
-  if (filter === 'yearly') length = 12;
+const getExpectedKeysForToday = (shift) => {
+  if (shift === 'shiftA') return [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+  if (shift === 'shiftB') return [20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8];
+  return Array.from({ length: 24 }, (_, i) => i);
+};
 
+const generateSampleData = (filter = 'monthly', selDate = '', selMonth = 1, shift = 'fullday') => {
+  const data = [];
+  
+  if (filter === 'today') {
+    const keys = getExpectedKeysForToday(shift);
+    keys.forEach(key => {
+      data.push({
+        day: key,
+        production: Math.floor(Math.random() * (400 - 100 + 1) + 100),
+        idle_minutes: Math.floor(Math.random() * (15 - 0 + 1) + 0),
+        shutdown_minutes: Math.floor(Math.random() * (20 - 0 + 1) + 0),
+        has_data: true
+      });
+    });
+    return data;
+  }
+
+  let length = filter === 'weekly' ? 7 : (filter === 'yearly' ? 12 : 30);
   let startWeeklyObj = null;
   if (filter === 'weekly' && selDate) {
     const [y, m, d] = selDate.split('-');
@@ -103,16 +124,13 @@ const generateSampleData = (filter = 'monthly', selDate = '', selMonth = 1) => {
     startWeeklyObj.setDate(startWeeklyObj.getDate() - 6);
   }
 
-  const data = [];
   for (let i = 1; i <= length; i++) {
     let dayVal = i;
-    if (filter === 'today') dayVal = i - 1;
-    else if (filter === 'weekly' && startWeeklyObj) {
+    if (filter === 'weekly' && startWeeklyObj) {
       const tDate = new Date(startWeeklyObj);
       tDate.setDate(tDate.getDate() + (i - 1));
       dayVal = tDate.getDate();
     }
-
     data.push({
       day: dayVal,
       production: Math.floor(Math.random() * (8500 - 4500 + 1) + 4500),
@@ -124,49 +142,59 @@ const generateSampleData = (filter = 'monthly', selDate = '', selMonth = 1) => {
   return data;
 };
 
-const generateSampleMachineData = (machineNumber, filter = 'monthly', selDate = '', selMonth = 1) => {
-  let length = 30;
-  if (filter === 'today') length = 24;
-  if (filter === 'weekly') length = 7;
-  if (filter === 'yearly') length = 12;
-
-  let startWeeklyObj = null;
-  if (filter === 'weekly' && selDate) {
-    const [y, m, d] = selDate.split('-');
-    startWeeklyObj = new Date(y, m - 1, d);
-    startWeeklyObj.setDate(startWeeklyObj.getDate() - 6);
-  }
-
+const generateSampleMachineData = (machineNumber, filter = 'monthly', selDate = '', selMonth = 1, shift = 'fullday') => {
   const days = [];
-  const baseProduction = Math.floor(Math.random() * (400 - 200 + 1) + 200);
-  const baseIdleMins = Math.floor(Math.random() * (90 - 20 + 1) + 20);
-  const baseShutdownMins = Math.floor(Math.random() * (120 - 30 + 1) + 30);
-
   let activeDays = 0;
 
-  for (let i = 1; i <= length; i++) {
-    const isOfflineDay = Math.random() > 0.85;
-
-    let dayVal = i;
-    if (filter === 'today') dayVal = i - 1;
-    else if (filter === 'weekly' && startWeeklyObj) {
-      const tDate = new Date(startWeeklyObj);
-      tDate.setDate(tDate.getDate() + (i - 1));
-      dayVal = tDate.getDate();
+  if (filter === 'today') {
+    const keys = getExpectedKeysForToday(shift);
+    keys.forEach(key => {
+      const isOfflineHour = Math.random() > 0.85;
+      if (isOfflineHour) {
+        days.push({ day: key, production: 0, idle_minutes: 0, shutdown_minutes: 0, has_data: false, status: 'Offline' });
+      } else {
+        activeDays++;
+        days.push({
+          day: key,
+          production: Math.floor(Math.random() * (50 - 10 + 1) + 10),
+          idle_minutes: Math.floor(Math.random() * (5 - 0 + 1) + 0),
+          shutdown_minutes: Math.floor(Math.random() * (10 - 0 + 1) + 0),
+          has_data: true,
+          status: 'Active'
+        });
+      }
+    });
+  } else {
+    let length = filter === 'weekly' ? 7 : (filter === 'yearly' ? 12 : 30);
+    let startWeeklyObj = null;
+    if (filter === 'weekly' && selDate) {
+      const [y, m, d] = selDate.split('-');
+      startWeeklyObj = new Date(y, m - 1, d);
+      startWeeklyObj.setDate(startWeeklyObj.getDate() - 6);
     }
+    
+    for (let i = 1; i <= length; i++) {
+      const isOfflineDay = Math.random() > 0.85;
+      let dayVal = i;
+      if (filter === 'weekly' && startWeeklyObj) {
+        const tDate = new Date(startWeeklyObj);
+        tDate.setDate(tDate.getDate() + (i - 1));
+        dayVal = tDate.getDate();
+      }
 
-    if (isOfflineDay) {
-      days.push({ day: dayVal, production: 0, idle_minutes: 0, shutdown_minutes: 0, has_data: false, status: 'Offline' });
-    } else {
-      activeDays++;
-      days.push({
-        day: dayVal,
-        production: baseProduction + Math.floor(Math.random() * 100) - 50,
-        idle_minutes: baseIdleMins + Math.floor(Math.random() * 30) - 15,
-        shutdown_minutes: baseShutdownMins + Math.floor(Math.random() * 40) - 20,
-        has_data: true,
-        status: 'Active'
-      });
+      if (isOfflineDay) {
+        days.push({ day: dayVal, production: 0, idle_minutes: 0, shutdown_minutes: 0, has_data: false, status: 'Offline' });
+      } else {
+        activeDays++;
+        days.push({
+          day: dayVal,
+          production: Math.floor(Math.random() * (400 - 200 + 1) + 200),
+          idle_minutes: Math.floor(Math.random() * (90 - 20 + 1) + 20),
+          shutdown_minutes: Math.floor(Math.random() * (120 - 30 + 1) + 30),
+          has_data: true,
+          status: 'Active'
+        });
+      }
     }
   }
 
@@ -177,7 +205,7 @@ const generateSampleMachineData = (machineNumber, filter = 'monthly', selDate = 
     machine_info: {
       machine_no: machineNumber,
       machine_id: `M-${String(machineNumber).padStart(2, '0')}`,
-      period_type: filter
+      period_type: filter === 'today' ? `${filter} (${shift})` : filter
     },
     production_summary: {
       total_production: days.reduce((sum, d) => sum + d.production, 0),
@@ -189,8 +217,8 @@ const generateSampleMachineData = (machineNumber, filter = 'monthly', selDate = 
     },
     machine_status: {
       active_days: activeDays,
-      inactive_days: length - activeDays,
-      active_percentage: Math.round((activeDays / length) * 100 * 10) / 10,
+      inactive_days: days.length - activeDays,
+      active_percentage: Math.round((activeDays / days.length) * 100 * 10) / 10,
       status: activeDays > 0 ? 'Operational' : 'Offline'
     },
     daily_breakdown: days
@@ -233,6 +261,9 @@ const ProductionHistory = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [timeFilter, setTimeFilter] = useState('today');
+  
+  const [shiftFilter, setShiftFilter] = useState('shiftA'); 
+  
   const [chartType, setChartType] = useState('bar');
   const [showMachineGrid, setShowMachineGrid] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -248,15 +279,17 @@ const ProductionHistory = () => {
   const [realtimeData, setRealtimeData] = useState(null);
   const [apiError, setApiError] = useState(false);
 
+  const sidebarRef = useRef(null);
+  const mainContentRef = useRef(null);
+
   const currentYear = new Date().getFullYear();
   const years = [];
   for (let i = currentYear - 3; i <= currentYear + 3; i++) {
     years.push(i.toString());
   }
 
-  const getMachineCount = () => selectedPlant === 'plant1' ? 57 : 49;
+  const getMachineCount = () => selectedPlant === 'plant1' ? 57 : 46;
 
-  // CUSTOM THEME COLORS APPLIED
   const isDark = theme === 'dark';
   const themeBgMain = isDark ? 'bg-[#0A0C10]' : 'bg-[#EEF1F5]';
   const themeCard = isDark ? 'bg-[#12151C] border-[#1E242E]' : 'bg-white border-[#DFE4EA]';
@@ -277,7 +310,8 @@ const ProductionHistory = () => {
           month: selectedMonth,
           year: selectedYear,
           period: timeFilter,
-          date: selectedDate
+          date: (timeFilter === 'today' || timeFilter === 'weekly') ? selectedDate : undefined,
+          shift: timeFilter === 'today' ? shiftFilter : undefined 
         }
       });
 
@@ -291,7 +325,7 @@ const ProductionHistory = () => {
     } catch (error) {
       console.error('Error fetching summary:', error);
       setApiError(true);
-      const sampleData = generateSampleData(timeFilter, selectedDate, selectedMonth);
+      const sampleData = generateSampleData(timeFilter, selectedDate, selectedMonth, shiftFilter);
       setMonthlyData(formatChartData(sampleData, timeFilter, selectedDate, selectedMonth));
       setMonthlySummary({
         month_name: timeFilter === 'today' || timeFilter === 'weekly' ? selectedDate : monthNamesFull[selectedMonth - 1],
@@ -329,7 +363,9 @@ const ProductionHistory = () => {
   };
 
   const fetchMachineAnalysis = async (machineNo, forceRefresh = false) => {
-    const cacheKey = `${machineNo}-${selectedMonth}-${selectedYear}-${timeFilter}-${selectedDate}`;
+    const currentParamDate = (timeFilter === 'today' || timeFilter === 'weekly') ? selectedDate : 'none';
+    const currentShift = timeFilter === 'today' ? shiftFilter : 'none';
+    const cacheKey = `${machineNo}-${selectedMonth}-${selectedYear}-${timeFilter}-${currentParamDate}-${currentShift}`;
 
     if (!forceRefresh && machineAnalysisCache[cacheKey]) {
       return machineAnalysisCache[cacheKey];
@@ -343,7 +379,8 @@ const ProductionHistory = () => {
           month: selectedMonth,
           year: selectedYear,
           period: timeFilter,
-          date: selectedDate
+          date: (timeFilter === 'today' || timeFilter === 'weekly') ? selectedDate : undefined,
+          shift: timeFilter === 'today' ? shiftFilter : undefined 
         }
       });
 
@@ -355,7 +392,7 @@ const ProductionHistory = () => {
       }
     } catch (error) {
       console.error(`Error fetching machine ${machineNo} analysis:`, error);
-      const sampleMachineData = generateSampleMachineData(machineNo, timeFilter, selectedDate, selectedMonth);
+      const sampleMachineData = generateSampleMachineData(machineNo, timeFilter, selectedDate, selectedMonth, shiftFilter);
       setMachineAnalysisCache(prev => ({ ...prev, [cacheKey]: sampleMachineData }));
       return sampleMachineData;
     }
@@ -378,7 +415,7 @@ const ProductionHistory = () => {
       setLoading(false);
     };
     loadAllData();
-  }, [selectedPlant, selectedMonth, selectedYear, timeFilter, selectedDate, selectedMachine]);
+  }, [selectedPlant, selectedMonth, selectedYear, timeFilter, selectedDate, selectedMachine, shiftFilter]); 
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -392,14 +429,29 @@ const ProductionHistory = () => {
       } else {
         fetchMonthlySummary();
       }
-    }, 30000);
-
+    }, 10000);
     return () => clearInterval(interval);
-  }, [selectedPlant, selectedMonth, selectedYear, timeFilter, selectedDate, selectedMachine]);
+  }, [selectedPlant, selectedMonth, selectedYear, timeFilter, selectedDate, selectedMachine, shiftFilter]); 
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!mainContentRef.current || !sidebarRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const height = entry.contentRect.height;
+        if (sidebarRef.current) {
+          sidebarRef.current.style.minHeight = `${height}px`;
+        }
+      }
+    });
+
+    observer.observe(mainContentRef.current);
+    return () => observer.disconnect();
   }, []);
 
   const selectMachine = (machineNumber) => {
@@ -443,7 +495,6 @@ const ProductionHistory = () => {
 
   const renderChart = () => {
     let data = monthlyData;
-
     if (selectedMachine && selectedMachineDetail && selectedMachineDetail.daily_breakdown) {
       data = formatChartData(selectedMachineDetail.daily_breakdown, timeFilter, selectedDate, selectedMonth);
     }
@@ -454,9 +505,6 @@ const ProductionHistory = () => {
           <div className="text-center">
             <div className={`mb-2 font-semibold ${themeTextMuted}`}>No data available</div>
             <div className={`text-xs ${themeTextMuted}`}>Please check your API connection or select different filters</div>
-            {apiError && (
-              <div className="text-xs text-amber-500 mt-2">API connection error. Using sample data.</div>
-            )}
           </div>
         </div>
       );
@@ -474,24 +522,14 @@ const ProductionHistory = () => {
     const chartStroke = isDark ? '#5B6472' : '#64748b';
     const gridStroke = isDark ? '#1B2029' : '#e2e8f0';
 
-    if (loading && !selectedMachineDetail && selectedMachine) {
+    if (loading && (selectedMachine || !monthlySummary)) {
       return (
         <div className={`flex items-center justify-center h-full font-medium font-data text-sm ${themeTextMuted}`}>
           <span className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full animate-pulse ${themeAccentBg}`} /> LOADING MACHINE DATA...
+            <span className={`w-2 h-2 rounded-full animate-pulse ${themeAccentBg}`} /> LOADING TELEMETRY...
           </span>
         </div>
       );
-    }
-    
-    if (loading && !monthlySummary && !selectedMachine) {
-        return (
-          <div className={`flex items-center justify-center h-full font-medium font-data text-sm ${themeTextMuted}`}>
-            <span className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full animate-pulse ${themeAccentBg}`} /> LOADING TELEMETRY...
-            </span>
-          </div>
-        );
     }
 
     switch (chartType) {
@@ -501,18 +539,10 @@ const ProductionHistory = () => {
             <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
             <XAxis dataKey="name" stroke={chartStroke} fontSize={10} fontFamily="'JetBrains Mono', monospace" tickLine={false} interval="preserveStartEnd" />
             <YAxis stroke={chartStroke} fontSize={10} fontFamily="'JetBrains Mono', monospace" tickLine={false} />
-            <Tooltip
-              contentStyle={customTooltip}
-              formatter={(value, name) => {
-                if (name === 'idle') return [formatTimeHelper(value), 'Idle (ONLINE)'];
-                if (name === 'production') return [value.toLocaleString(), 'Production (units)'];
-                if (name === 'shutdown') return [formatTimeHelper(value), 'Shutdown (OFFLINE)'];
-                return [value, name];
-              }}
-            />
-            <Line type="monotone" dataKey="production" stroke="#10b981" strokeWidth={2.5} dot={{ fill: '#10b981', r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
-            <Line type="monotone" dataKey="idle" stroke="#f59e0b" strokeWidth={2.5} dot={{ fill: '#f59e0b', r: 4, strokeWidth: 0 }} />
-            <Line type="monotone" dataKey="shutdown" stroke="#ef4444" strokeWidth={2.5} dot={{ fill: '#ef4444', r: 4, strokeWidth: 0 }} />
+            <Tooltip contentStyle={customTooltip} />
+            <Line type="monotone" dataKey="production" stroke="#10b981" strokeWidth={2.5} dot={{ fill: '#10b981', r: 4 }} />
+            <Line type="monotone" dataKey="idle" stroke="#f59e0b" strokeWidth={2.5} dot={{ fill: '#f59e0b', r: 4 }} />
+            <Line type="monotone" dataKey="shutdown" stroke="#ef4444" strokeWidth={2.5} dot={{ fill: '#ef4444', r: 4 }} />
           </LineChart>
         );
       case 'area':
@@ -523,58 +553,22 @@ const ProductionHistory = () => {
                 <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
                 <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
               </linearGradient>
-              <linearGradient id="idleGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.0} />
-              </linearGradient>
-              <linearGradient id="shutdownGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#ef4444" stopOpacity={0.0} />
-              </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
             <XAxis dataKey="name" stroke={chartStroke} fontSize={10} fontFamily="'JetBrains Mono', monospace" tickLine={false} interval="preserveStartEnd" />
             <YAxis stroke={chartStroke} fontSize={10} fontFamily="'JetBrains Mono', monospace" tickLine={false} />
-            <Tooltip
-              contentStyle={customTooltip}
-              formatter={(value, name) => {
-                if (name === 'idle') return [formatTimeHelper(value), 'Idle (ONLINE)'];
-                if (name === 'production') return [value.toLocaleString(), 'Production (units)'];
-                if (name === 'shutdown') return [formatTimeHelper(value), 'Shutdown (OFFLINE)'];
-                return [value, name];
-              }}
-            />
+            <Tooltip contentStyle={customTooltip} />
             <Area type="monotone" dataKey="production" stroke="#10b981" strokeWidth={2} fill="url(#productionGradient)" />
-            <Area type="monotone" dataKey="idle" stroke="#f59e0b" strokeWidth={2} fill="url(#idleGradient)" />
-            <Area type="monotone" dataKey="shutdown" stroke="#ef4444" strokeWidth={2} fill="url(#shutdownGradient)" />
+            <Area type="monotone" dataKey="idle" stroke="#f59e0b" strokeWidth={2} fill="none" />
+            <Area type="monotone" dataKey="shutdown" stroke="#ef4444" strokeWidth={2} fill="none" />
           </AreaChart>
         );
       default:
         return (
           <BarChart {...commonProps} barGap={4}>
-            {/* Minimalist Professional Grid */}
             <CartesianGrid strokeDasharray="4 4" stroke={gridStroke} vertical={false} opacity={0.3} />
-            
-            <XAxis 
-              dataKey="name" 
-              stroke={chartStroke} 
-              fontSize={11} 
-              fontFamily="'JetBrains Mono', monospace" 
-              tickLine={false} 
-              axisLine={false} 
-              dy={12} 
-              interval="preserveStartEnd" 
-            />
-            <YAxis 
-              stroke={chartStroke} 
-              fontSize={11} 
-              fontFamily="'JetBrains Mono', monospace" 
-              tickLine={false} 
-              axisLine={false} 
-              dx={-10} 
-            />
-            
-            {/* Tooltip Matching Your Image */}
+            <XAxis dataKey="name" stroke={chartStroke} fontSize={11} fontFamily="'JetBrains Mono', monospace" tickLine={false} axisLine={false} dy={12} interval="preserveStartEnd" />
+            <YAxis stroke={chartStroke} fontSize={11} fontFamily="'JetBrains Mono', monospace" tickLine={false} axisLine={false} dx={-10} />
             <Tooltip
               contentStyle={customTooltip}
               formatter={(value, name) => {
@@ -585,8 +579,6 @@ const ProductionHistory = () => {
               }}
               cursor={{ fill: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}
             />
-            
-            {/* Original Solid Colors but with Professional Gap and Radius */}
             <Bar dataKey="idle" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={16} />
             <Bar dataKey="production" fill="#10b981" radius={[4, 4, 0, 0]} barSize={16} />
             <Bar dataKey="shutdown" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={16} />
@@ -596,13 +588,8 @@ const ProductionHistory = () => {
   };
 
   return (
-    <div className={`font-ui min-h-screen relative overflow-x-hidden transition-colors duration-300 ${themeBgMain} ${isDark ? 'theme-dark' : ''}`}
-      style={{
-        backgroundImage: isDark
-          ? 'radial-gradient(circle, #161b24 1px, transparent 1px)'
-          : 'radial-gradient(circle, #dbe1e8 1px, transparent 1px)',
-        backgroundSize: '22px 22px'
-      }}
+    <div className={`font-ui min-h-fit relative overflow-x-hidden transition-colors duration-300 ${themeBgMain} ${isDark ? 'theme-dark' : ''}`}
+      style={{ backgroundImage: isDark ? 'radial-gradient(circle, #161b24 1px, transparent 1px)' : 'radial-gradient(circle, #dbe1e8 1px, transparent 1px)', backgroundSize: '22px 22px' }}
     >
       <div className="w-full mx-auto p-4 md:p-6 lg:p-8 relative z-10">
 
@@ -624,7 +611,6 @@ const ProductionHistory = () => {
                 <button
                   onClick={() => setTheme(isDark ? 'light' : 'dark')}
                   className={`flex items-center justify-center p-2 rounded-lg border transition-all ${isDark ? 'bg-[#171B23] border-[#1E242E] text-[#18a8c6] hover:bg-[#1E242E]' : 'bg-white border-slate-200 text-[#18a8c6] hover:bg-slate-100 shadow-sm'}`}
-                  title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
                 >
                   {isDark ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
@@ -641,62 +627,34 @@ const ProductionHistory = () => {
             </h1>
             <p className={`text-sm mt-2 font-medium flex items-center flex-wrap gap-2 ${themeTextMuted}`}>
               <Activity size={16} className={themeAccentText} /> Real-Time Monitoring System
-              {dateRange && dateRange.first_date && (
-                <span className={`font-data text-[11px] px-2 py-0.5 rounded-md border ml-2 ${isDark ? 'bg-[#171B23] text-[#18a8c6] border-[#1E242E]' : 'bg-[#18a8c6]/10 text-[#128a9c] border-[#18a8c6]/20'}`}>
-                  Database: {new Date(dateRange.first_date).toLocaleDateString()} - {new Date(dateRange.last_date).toLocaleDateString()}
-                </span>
-              )}
-              {apiError && (
-                <span className={`text-xs px-2 py-0.5 rounded-md border ml-2 ${isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                  ⚠️ Demo Data Mode
-                </span>
-              )}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          <div className="lg:col-span-3 space-y-6">
+          <div ref={sidebarRef} className="lg:col-span-3 flex flex-col gap-6">
 
             <div className={`border rounded-xl overflow-hidden shadow-sm transition-colors duration-300 ${themeCard}`}>
               <div className={`px-5 py-3.5 border-b flex items-center gap-2 ${themeSubBg}`}>
                 <Filter size={15} className={themeAccentText} />
                 <h2 className={`text-[11px] font-bold tracking-widest uppercase ${themeTextMain}`}>Filters &amp; Parameters</h2>
               </div>
-
               <div className="p-5 space-y-6">
-
                 <div>
                   <label className={`text-[10px] font-bold block mb-2.5 flex items-center gap-2 uppercase tracking-widest ${themeTextMuted}`}>
                     <Factory size={13} className={isDark ? 'text-slate-500' : 'text-slate-400'} /> Plant Selection
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
-                      onClick={() => {
-                        setSelectedPlant('plant1');
-                        setSelectedMachine(null);
-                        setSelectedMachineDetail(null);
-                      }}
-                      className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border transition-all duration-200 font-semibold text-sm ${
-                        selectedPlant === 'plant1'
-                          ? `${themeAccentBg} border-transparent text-[#04120F] shadow-md`
-                          : `border-transparent ${themeSubBg} ${isDark ? 'text-slate-300 hover:border-[#18a8c6]/40' : 'text-slate-600 hover:border-[#18a8c6]/40 hover:bg-[#18a8c6]/10'}`
-                      }`}
+                      onClick={() => { setSelectedPlant('plant1'); setSelectedMachine(null); setSelectedMachineDetail(null); }}
+                      className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border transition-all duration-200 font-semibold text-sm ${selectedPlant === 'plant1' ? `${themeAccentBg} border-transparent text-[#04120F] shadow-md` : `border-transparent ${themeSubBg} ${isDark ? 'text-slate-300' : 'text-slate-600'}`}`}
                     >
                       <Cpu size={16} /> Plant 1
                     </button>
                     <button
-                      onClick={() => {
-                        setSelectedPlant('plant2');
-                        setSelectedMachine(null);
-                        setSelectedMachineDetail(null);
-                      }}
-                      className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border transition-all duration-200 font-semibold text-sm ${
-                        selectedPlant === 'plant2'
-                          ? `${themeAccentBg} border-transparent text-[#04120F] shadow-md`
-                          : `border-transparent ${themeSubBg} ${isDark ? 'text-slate-300 hover:border-[#18a8c6]/40' : 'text-slate-600 hover:border-[#18a8c6]/40 hover:bg-[#18a8c6]/10'}`
-                      }`}
+                      onClick={() => { setSelectedPlant('plant2'); setSelectedMachine(null); setSelectedMachineDetail(null); }}
+                      className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border transition-all duration-200 font-semibold text-sm ${selectedPlant === 'plant2' ? `${themeAccentBg} border-transparent text-[#04120F] shadow-md` : `border-transparent ${themeSubBg} ${isDark ? 'text-slate-300' : 'text-slate-600'}`}`}
                     >
                       <Zap size={16} /> Plant 2
                     </button>
@@ -708,14 +666,10 @@ const ProductionHistory = () => {
                     <label className={`text-[10px] font-bold flex items-center gap-2 uppercase tracking-widest ${themeTextMuted}`}>
                       <Settings size={13} className={isDark ? 'text-slate-500' : 'text-slate-400'} /> Machine No.
                     </label>
-                    <button
-                      onClick={() => setShowMachineGrid(!showMachineGrid)}
-                      className={`p-1 rounded-md transition-colors mt-5 ${isDark ? 'bg-[#171B23] text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-400 hover:text-[#18a8c6] hover:bg-[#18a8c6]/10'}`}
-                    >
+                    <button onClick={() => setShowMachineGrid(!showMachineGrid)} className={`p-1 rounded-md transition-colors mt-5 ${isDark ? 'bg-[#171B23] text-slate-400' : 'bg-slate-100 text-slate-400'}`}>
                       {showMachineGrid ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </button>
                   </div>
-
                   {showMachineGrid && (
                     <div className="space-y-3">
                       <div className="grid grid-cols-5 gap-1.5 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
@@ -723,24 +677,14 @@ const ProductionHistory = () => {
                           <button
                             key={num}
                             onClick={() => selectMachine(num)}
-                            className={`font-data aspect-square flex items-center justify-center text-xs font-semibold rounded-md border transition-all cursor-pointer ${
-                              selectedMachine === num
-                                ? `${themeAccentBg} border-transparent text-[#04120F] shadow-md`
-                                : `${themeSubBg} ${isDark ? 'text-slate-300 hover:border-[#18a8c6]/50 hover:text-[#18a8c6]' : 'text-slate-600 hover:border-[#18a8c6]/60 hover:text-[#18a8c6] hover:bg-[#18a8c6]/10'}`
-                            }`}
-                            title={`View details for Machine ${num}`}
+                            className={`font-data aspect-square flex items-center justify-center text-xs font-semibold rounded-md border transition-all cursor-pointer ${selectedMachine === num ? `${themeAccentBg} border-transparent text-[#04120F] shadow-md` : `${themeSubBg} ${isDark ? 'text-slate-300' : 'text-slate-600'}`}`}
                           >
                             {String(num).padStart(2, '0')}
                           </button>
                         ))}
                       </div>
                       <div className={`flex items-center justify-between pt-3 border-t ${themeBorder}`}>
-                        <button
-                          onClick={clearMachine}
-                          className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${isDark ? 'text-slate-400 hover:bg-red-500/10 hover:text-red-400' : 'text-slate-500 hover:bg-red-50 hover:text-red-600'}`}
-                        >
-                          Clear All
-                        </button>
+                        <button onClick={clearMachine} className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Clear All</button>
                         <div className={`font-data text-[11px] font-bold px-2 py-1 rounded border ${isDark ? 'bg-[#171B23] border-[#1E242E] text-slate-300' : 'bg-slate-100 border-transparent text-slate-600'}`}>
                           {selectedMachine ? `M-${String(selectedMachine).padStart(2, '0')}` : 'None'}
                         </div>
@@ -751,7 +695,7 @@ const ProductionHistory = () => {
               </div>
             </div>
 
-            <div className={`border rounded-xl p-5 shadow-sm transition-colors duration-300 ${themeCard}`}>
+            <div className={`border rounded-xl p-5 shadow-sm transition-colors duration-300 flex-1 flex flex-col ${themeCard}`}>
               <div className={`flex items-center gap-2 mb-4 pb-3 border-b ${themeBorder}`}>
                 <Monitor size={16} className={themeAccentText} />
                 <span className={`text-[11px] font-bold uppercase tracking-widest ${themeTextMain}`}>System Status</span>
@@ -760,8 +704,7 @@ const ProductionHistory = () => {
                 <div className="flex justify-between items-center">
                   <span className={`font-medium ${themeTextMuted}`}>Data Stream</span>
                   <span className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${apiError ? (isDark ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-100 text-amber-700') : (isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-100 text-emerald-700')}`}>
-                    <div className={`w-2 h-2 rounded-full ${apiError ? 'bg-amber-500' : 'bg-emerald-500'} animate-pulse`} />
-                    {apiError ? 'DEMO' : 'ACTIVE'}
+                    <div className={`w-2 h-2 rounded-full ${apiError ? 'bg-amber-500' : 'bg-emerald-500'} animate-pulse`} /> {apiError ? 'DEMO' : 'ACTIVE'}
                   </span>
                 </div>
                 {realtimeData && (
@@ -776,44 +719,11 @@ const ProductionHistory = () => {
                     </div>
                   </>
                 )}
-                <div className={`flex justify-between items-center pt-3 border-t ${themeBorder}`}>
-                  <span className={`text-xs font-medium ${themeTextMuted}`}>Last Sync</span>
-                  <span className={`font-data text-xs px-2 py-1 rounded border ${isDark ? 'bg-[#171B23] border-[#1E242E] text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'}`}>{formattedTime}</span>
-                </div>
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-9 space-y-6">
-
-            <div className={`border rounded-xl p-4 shadow-sm flex items-center justify-between flex-wrap gap-4 transition-colors duration-300 ${themeCard}`}>
-              <div className="flex items-center gap-4">
-                <span className={`text-[11px] font-bold uppercase tracking-widest ${themeTextMuted}`}>Chart Style Controls</span>
-              </div>
-
-              <div className="flex items-center gap-6">
-                <div className={`flex p-1 rounded-lg border ${themeSubBg}`}>
-                  <button onClick={() => setChartType('bar')} className={`p-1.5 rounded-md transition-all ${chartType === 'bar' ? (isDark ? 'bg-[#12151C] shadow-sm text-[#18a8c6]' : 'bg-white shadow-sm text-[#18a8c6]') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>
-                    <BarChartIcon size={18} />
-                  </button>
-                  <button onClick={() => setChartType('line')} className={`p-1.5 rounded-md transition-all ${chartType === 'line' ? (isDark ? 'bg-[#12151C] shadow-sm text-[#18a8c6]' : 'bg-white shadow-sm text-[#18a8c6]') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>
-                    <LineChartIcon size={18} />
-                  </button>
-                  <button onClick={() => setChartType('area')} className={`p-1.5 rounded-md transition-all ${chartType === 'area' ? (isDark ? 'bg-[#12151C] shadow-sm text-[#18a8c6]' : 'bg-white shadow-sm text-[#18a8c6]') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>
-                    <AreaChartIcon size={18} />
-                  </button>
-                </div>
-
-                <div className="flex gap-2">
-                  <button onClick={startAnimation} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all ${isDark ? 'bg-[#18a8c6]/10 text-[#18a8c6] border-[#18a8c6]/20 hover:bg-[#18a8c6]/20' : 'bg-[#18a8c6]/10 text-[#128a9c] border-[#18a8c6]/30 hover:bg-[#18a8c6]/20'}`}>
-                    <Play size={14} /> Anim
-                  </button>
-                  <button onClick={stopAnimation} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all ${isDark ? 'bg-[#171B23] text-slate-300 border-[#1E242E] hover:bg-[#1E242E]' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}>
-                    <Square size={14} /> Stop
-                  </button>
-                </div>
-              </div>
-            </div>
+          <div ref={mainContentRef} className="lg:col-span-9 space-y-6">
 
             <div className={`border rounded-xl overflow-hidden shadow-sm transition-colors duration-300 ${themeCard}`}>
               <div className={`px-6 pt-6 pb-4 border-b ${themeBorder}`}>
@@ -824,7 +734,6 @@ const ProductionHistory = () => {
                       <BarChart3 size={20} className={themeAccentText} />
                       {selectedMachine ? `Machine M-${String(selectedMachine).padStart(2, '0')} Production` : 'Overall Plant Production'}
                     </h3>
-
                     <p className={`font-data text-xs mt-1.5 font-medium flex items-center gap-2 ${themeTextMuted}`}>
                       <Calendar size={13} className={isDark ? "text-slate-500" : "text-slate-400"} />
                       {timeFilter === 'today'
@@ -838,13 +747,30 @@ const ProductionHistory = () => {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
 
                     <div className={`flex items-center rounded-lg p-0.5 shadow-sm transition-all border ${themeSubBg}`}>
+                      
                       {timeFilter === 'today' && (
-                        <input
-                          type="date"
-                          value={selectedDate}
-                          onChange={(e) => setSelectedDate(e.target.value)}
-                          className={`font-data appearance-none bg-transparent border-none px-3 py-1.5 text-sm font-bold focus:outline-none cursor-pointer ${isDark ? 'text-slate-200 color-scheme-dark' : 'text-slate-700'}`}
-                        />
+                        <div className="flex items-center">
+                          <input
+                            type="date"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className={`font-data appearance-none bg-transparent border-none px-3 py-1.5 text-sm font-bold focus:outline-none cursor-pointer ${isDark ? 'text-slate-200 color-scheme-dark' : 'text-slate-700'}`}
+                          />
+                          
+                          {/* SHIFT SELECTOR FOR TODAY WITH ARROW */}
+                          <div className={`relative border-l pl-2 flex items-center ${isDark ? 'border-[#1E242E]' : 'border-slate-300'}`}>
+                            <select
+                              value={shiftFilter}
+                              onChange={(e) => setShiftFilter(e.target.value)}
+                              className={`appearance-none bg-transparent border-none pl-2 pr-7 py-1.5 text-sm font-bold focus:outline-none cursor-pointer ${isDark ? 'text-slate-200' : 'text-slate-700'}`}
+                            >
+                              <option className={isDark ? 'bg-[#171B23]' : ''} value="shiftA">Shift A (08:30 AM - 08:00 PM)</option>
+                              <option className={isDark ? 'bg-[#171B23]' : ''} value="shiftB">Shift B (08:30 PM - 08:00 AM)</option>
+                              <option className={isDark ? 'bg-[#171B23]' : ''} value="fullday">Full Day (24h)</option>
+                            </select>
+                            <ChevronDown size={14} className={`absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                          </div>
+                        </div>
                       )}
 
                       {timeFilter === 'weekly' && (
@@ -860,7 +786,6 @@ const ProductionHistory = () => {
                               setSelectedDate(`${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`);
                             }}
                             className={`font-data appearance-none bg-transparent border-none pl-3 pr-1 py-1.5 text-sm font-bold focus:outline-none cursor-pointer ${isDark ? 'text-slate-200 color-scheme-dark' : 'text-slate-700'}`}
-                            title="Start Date"
                           />
                           <span className={`font-black px-1 ${isDark ? 'text-slate-500' : 'text-slate-300'}`}>-</span>
                           <input
@@ -868,37 +793,46 @@ const ProductionHistory = () => {
                             value={selectedDate}
                             onChange={(e) => setSelectedDate(e.target.value)}
                             className={`font-data appearance-none bg-transparent border-none pr-3 pl-1 py-1.5 text-sm font-bold focus:outline-none cursor-pointer ${isDark ? 'text-slate-200 color-scheme-dark' : 'text-slate-700'}`}
-                            title="End Date"
                           />
                         </div>
                       )}
 
                       {(timeFilter === 'monthly' || timeFilter === 'yearly') && (
                         <div className="flex items-center">
-                          <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                            className={`appearance-none bg-transparent border-none pl-3 pr-6 py-1.5 text-sm font-bold focus:outline-none cursor-pointer ${isDark ? 'text-slate-200' : 'text-slate-700'}`}
-                          >
-                            {monthNamesFull.map((month, idx) => (
-                              <option className={isDark ? 'bg-[#171B23]' : ''} key={month} value={idx + 1}>{month}</option>
-                            ))}
-                          </select>
-                          <span className={`px-1 ${isDark ? 'text-slate-500' : 'text-slate-300'}`}>|</span>
-                          <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(e.target.value)}
-                            className={`font-data appearance-none bg-transparent border-none pl-3 pr-6 py-1.5 text-sm font-bold focus:outline-none cursor-pointer ${isDark ? 'text-slate-200' : 'text-slate-700'}`}
-                          >
-                            {years.map(year => (
-                              <option className={isDark ? 'bg-[#171B23]' : ''} key={year} value={year}>{year}</option>
-                            ))}
-                          </select>
+                          {timeFilter === 'monthly' && (
+                            <>
+                              <div className="relative flex items-center">
+                                <select
+                                  value={selectedMonth}
+                                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                                  className={`appearance-none bg-transparent border-none pl-3 pr-7 py-1.5 text-sm font-bold focus:outline-none cursor-pointer ${isDark ? 'text-slate-200' : 'text-slate-700'}`}
+                                >
+                                  {monthNamesFull.map((month, idx) => (
+                                    <option className={isDark ? 'bg-[#171B23]' : ''} key={month} value={idx + 1}>{month}</option>
+                                  ))}
+                                </select>
+                                <ChevronDown size={14} className={`absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                              </div>
+                              <span className={`px-1 ${isDark ? 'text-slate-500' : 'text-slate-300'}`}>|</span>
+                            </>
+                          )}
+                          <div className="relative flex items-center">
+                            <select
+                              value={selectedYear}
+                              onChange={(e) => setSelectedYear(e.target.value)}
+                              className={`font-data appearance-none bg-transparent border-none pl-3 pr-7 py-1.5 text-sm font-bold focus:outline-none cursor-pointer ${isDark ? 'text-slate-200' : 'text-slate-700'}`}
+                            >
+                              {years.map(year => (
+                                <option className={isDark ? 'bg-[#171B23]' : ''} key={year} value={year}>{year}</option>
+                              ))}
+                            </select>
+                            <ChevronDown size={14} className={`absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                          </div>
                         </div>
                       )}
                     </div>
 
-                    <div className={`relative group flex items-center rounded-lg p-0.5 shadow-sm transition-all border ${isDark ? 'bg-[#18a8c6]/10 border-[#18a8c6]/20 hover:border-[#18a8c6]/40' : 'bg-[#18a8c6]/10 border-[#18a8c6]/30 hover:border-[#18a8c6]/50'}`}>
+                    <div className={`relative group flex items-center rounded-lg p-0.5 shadow-sm transition-all border ${isDark ? 'bg-[#18a8c6]/10 border-[#18a8c6]/20' : 'bg-[#18a8c6]/10 border-[#18a8c6]/30'}`}>
                       <select
                         value={timeFilter}
                         onChange={(e) => setTimeFilter(e.target.value)}
@@ -909,19 +843,7 @@ const ProductionHistory = () => {
                         <option className={isDark ? 'bg-[#171B23]' : ''} value="monthly">Monthly</option>
                         <option className={isDark ? 'bg-[#171B23]' : ''} value="yearly">Yearly</option>
                       </select>
-                      <ChevronDown size={14} className={`absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${isDark ? 'text-[#18a8c6] group-hover:text-white' : 'text-[#18a8c6] group-hover:text-[#117686]'}`} />
-                    </div>
-
-                    <div className={`flex flex-wrap gap-3 text-[11px] font-semibold px-3 py-2 rounded-lg border ${themeSubBg}`}>
-                      <span className={`flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                        <span className="w-2.5 h-2.5 bg-[#10b981] rounded-sm"></span> Production Output
-                      </span>
-                      <span className={`flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                        <span className="w-2.5 h-2.5 bg-[#f59e0b] rounded-sm"></span> Idle (ONLINE)
-                      </span>
-                      <span className={`flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                        <span className="w-2.5 h-2.5 bg-[#ef4444] rounded-sm"></span> Shutdown (OFFLINE)
-                      </span>
+                      <ChevronDown size={14} className={`absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${isDark ? 'text-[#18a8c6]' : 'text-[#18a8c6]'}`} />
                     </div>
 
                   </div>
@@ -932,61 +854,55 @@ const ProductionHistory = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   {renderChart()}
                 </ResponsiveContainer>
-                {isAnimating && (
-                  <div className="font-data absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-[#18a8c6] text-[#04120F] px-5 py-2.5 rounded-full text-sm font-bold shadow-lg animate-bounce flex items-center gap-2">
-                    <Play size={14} fill="#04120F" /> Animating Record {currentDay + 1}/{monthlyData.length}
-                  </div>
-                )}
               </div>
             </div>
 
-            {selectedMachine && selectedMachineDetail && (
+            {/* Machine Detail Cards (ENLARGED & RESTORED) */}
+            {selectedMachine && selectedMachineDetail ? (
               <div className={`border rounded-xl p-6 shadow-sm animate-fadeIn transition-colors duration-300 ${themeCard}`}>
-                <div className="flex justify-between items-center mb-5">
-                  <h3 className={`text-xl font-bold flex items-center gap-2 ${themeTextMain}`}>
-                    <Cpu size={22} className={themeAccentText} />
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className={`text-2xl font-bold flex items-center gap-2 ${themeTextMain}`}>
+                    <Cpu size={26} className={themeAccentText} />
                     {selectedMachineDetail.machine_info.machine_id} Overview
-                    <span className={`font-data text-[10px] px-2 py-0.5 ml-2 border rounded capitalize ${isDark ? 'bg-[#18a8c6]/10 text-[#18a8c6] border-[#18a8c6]/20' : 'bg-[#18a8c6]/10 text-[#128a9c] border-[#18a8c6]/20'}`}>
+                    <span className={`font-data text-xs px-2 py-1 ml-2 border rounded capitalize ${isDark ? 'bg-[#18a8c6]/10 text-[#18a8c6] border-[#18a8c6]/20' : 'bg-[#18a8c6]/10 text-[#128a9c] border-[#18a8c6]/20'}`}>
                       {selectedMachineDetail.machine_info.period_type || timeFilter}
                     </span>
                   </h3>
                 </div>
-
-                <div className="space-y-5">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className={`rounded-lg p-4 border transition-colors ${themeSubBg}`}>
-                      <p className={`text-[10px] font-bold mb-1 uppercase tracking-widest ${themeTextMuted}`}>Total Prod.</p>
-                      <p className="font-data text-xl font-bold text-[#10b981]">
-                        {selectedMachineDetail.production_summary.total_production.toLocaleString()} <span className={`text-xs font-normal ${themeTextMuted}`}>units</span>
+                
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                    <div className={`rounded-xl px-5 pt-5 pb-4 border transition-colors flex flex-col justify-between min-h-[110px] ${themeSubBg}`}>
+                      <p className={`text-[10px] font-bold mb-2 uppercase tracking-widest ${themeTextMuted}`}>Total Prod.</p>
+                      <p className="font-data text-3xl font-bold text-[#10b981]">
+                        {selectedMachineDetail.production_summary.total_production.toLocaleString()}
                       </p>
                     </div>
-
-                    <div className={`rounded-lg p-4 border transition-colors ${themeSubBg}`}>
-                      <p className={`text-[10px] font-bold mb-1 uppercase tracking-widest ${themeTextMuted}`}>Idle (Online)</p>
-                      <p className="font-data text-xl font-bold text-[#f59e0b]">
-                        {selectedMachineDetail.idle_summary.total_idle_hours.toFixed(1)} <span className={`text-xs font-normal ${themeTextMuted}`}>hrs</span>
+                    <div className={`rounded-xl px-5 pt-5 pb-4 border transition-colors flex flex-col justify-between min-h-[110px] ${themeSubBg}`}>
+                      <p className={`text-[10px] font-bold mb-2 uppercase tracking-widest ${themeTextMuted}`}>Idle (Online)</p>
+                      <p className="font-data text-3xl font-bold text-[#f59e0b]">
+                        {selectedMachineDetail.idle_summary.total_idle_hours.toFixed(1)} <span className="text-sm font-normal">hrs</span>
                       </p>
                     </div>
-
-                    <div className={`rounded-lg p-4 border transition-colors ${themeSubBg}`}>
-                      <p className={`text-[10px] font-bold mb-1 uppercase tracking-widest ${themeTextMuted}`}>Shutdown (Offline)</p>
-                      <p className="font-data text-xl font-bold text-[#ef4444]">
-                        {selectedMachineDetail.idle_summary.total_shutdown_hours?.toFixed(1) || '0.0'} <span className={`text-xs font-normal ${themeTextMuted}`}>hrs</span>
+                    <div className={`rounded-xl px-5 pt-5 pb-4 border transition-colors flex flex-col justify-between min-h-[110px] ${themeSubBg}`}>
+                      <p className={`text-[10px] font-bold mb-2 uppercase tracking-widest ${themeTextMuted}`}>Shutdown (Offline)</p>
+                      <p className="font-data text-3xl font-bold text-[#ef4444]">
+                        {selectedMachineDetail.idle_summary.total_shutdown_hours?.toFixed(1) || '0.0'} <span className="text-sm font-normal">hrs</span>
                       </p>
                     </div>
-
-                    <div className={`rounded-lg p-4 border transition-colors flex items-center justify-between ${themeSubBg}`}>
-                      <div>
-                        <p className={`text-[10px] font-bold mb-1 uppercase tracking-widest ${themeTextMuted}`}>Active Rate</p>
-                        <p className={`font-data text-xl font-bold ${themeAccentText}`}>{selectedMachineDetail.machine_status.active_percentage}%</p>
+                    <div className={`rounded-xl px-5 py-4 border transition-colors flex items-center justify-between min-h-[110px] ${themeSubBg}`}>
+                      <div className="flex flex-col justify-between h-full">
+                        <p className={`text-[10px] font-bold mb-2 uppercase tracking-widest ${themeTextMuted}`}>Active Rate</p>
+                        <p className={`font-data text-3xl font-bold ${themeAccentText}`}>{selectedMachineDetail.machine_status.active_percentage}%</p>
                       </div>
-                      <RadialGauge percentage={selectedMachineDetail.machine_status.active_percentage} size={44} stroke={4} color={accentHex} trackColor={trackHex} isDark={isDark} />
+                      <RadialGauge percentage={selectedMachineDetail.machine_status.active_percentage} size={50} stroke={5} color={accentHex} trackColor={trackHex} isDark={isDark} />
                     </div>
                   </div>
 
-                  <div className={`rounded-lg p-4 border transition-colors ${themeSubBg}`}>
-                    <div className="flex justify-between items-end mb-2">
-                      <p className={`text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                  {/* RESTORED BOTTOM PROGRESS BAR */}
+                  <div className={`rounded-xl p-5 border transition-colors ${themeSubBg}`}>
+                    <div className="flex justify-between items-end mb-2.5">
+                      <p className={`text-sm font-semibold ${themeTextMain}`}>
                         Current Status: <span className={selectedMachineDetail.machine_status.status === 'Operational' ? 'text-[#10b981] ml-1' : 'text-[#ef4444] ml-1'}>
                           {selectedMachineDetail.machine_status.status}
                         </span>
@@ -995,120 +911,94 @@ const ProductionHistory = () => {
                         Active Data: {selectedMachineDetail.machine_status.active_days} Segments | Inactive: {selectedMachineDetail.machine_status.inactive_days} Segments
                       </p>
                     </div>
-                    <div className={`h-2.5 rounded-full overflow-hidden flex ${isDark ? 'bg-[#0A0C10]' : 'bg-slate-200'}`}>
+                    <div className={`h-3 rounded-full overflow-hidden flex ${isDark ? 'bg-[#0A0C10]' : 'bg-slate-200'}`}>
                       <div className="h-full bg-[#10b981] transition-all duration-1000" style={{ width: `${selectedMachineDetail.machine_status.active_percentage}%` }} />
                       <div className="h-full bg-[#ef4444] transition-all duration-1000" style={{ width: `${100 - selectedMachineDetail.machine_status.active_percentage}%` }} />
                     </div>
                   </div>
                 </div>
               </div>
-            )}
-
-            {monthlySummary && !selectedMachine && (
+            ) : monthlySummary && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className={`border rounded-xl p-6 shadow-sm transition-all group relative overflow-hidden ${themeCard} ${isDark ? 'hover:border-[#10b981]/50' : 'hover:border-emerald-200 hover:shadow-md'}`}>
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[#10b981]" />
-                  <div className="flex justify-between items-start mb-2">
+                
+                {/* Plant Overview Cards (ENLARGED & RESTORED PTI TIGHTLY TO BOTTOM) */}
+                <div className={`border rounded-xl px-5 pt-5 pb-3 shadow-sm transition-all flex flex-col justify-between min-h-[140px] relative overflow-hidden ${themeCard}`}>
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-[#10b981]" />
+                  <div className="flex justify-between items-start">
                     <div>
-                      <p className={`text-[10px] font-bold flex items-center gap-2 uppercase tracking-widest ${themeTextMuted}`}>
-                        <Calendar size={13} className="text-[#10b981]" /> Total Production
+                      <p className={`text-[11px] font-bold flex items-center gap-1.5 uppercase tracking-widest ${themeTextMuted}`}>
+                        <Calendar size={14} className="text-[#10b981]" /> Total Production
                       </p>
-                      <p className={`font-data text-3xl font-extrabold mt-2 ${themeTextMain}`}>
+                      <p className={`font-data text-4xl font-extrabold mt-3 ${themeTextMain}`}>
                         {monthlySummary.summary?.total_production?.toLocaleString() || 0}
                       </p>
                     </div>
-                    <div className={`p-3 rounded-lg ${isDark ? 'bg-[#10b981]/10' : 'bg-emerald-50'}`}>
-                      <Gauge size={22} className="text-[#10b981]" />
-                    </div>
                   </div>
-                  <p className={`text-xs mt-2 font-medium ${themeTextMuted}`}>Units produced in selected view</p>
+                  <p className={`text-[10px] font-medium mt-4 ${themeTextMuted}`}>Units produced in selected view</p>
                 </div>
 
-                <div className={`border rounded-xl p-6 shadow-sm transition-all group relative overflow-hidden ${themeCard} ${isDark ? 'hover:border-[#f59e0b]/50' : 'hover:border-amber-200 hover:shadow-md'}`}>
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[#f59e0b]" />
-                  <div className="flex justify-between items-start mb-2">
+                <div className={`border rounded-xl px-5 pt-5 pb-3 shadow-sm transition-all flex flex-col justify-between min-h-[140px] relative overflow-hidden ${themeCard}`}>
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-[#f59e0b]" />
+                  <div className="flex justify-between items-start">
                     <div>
-                      <p className={`text-[10px] font-bold flex items-center gap-2 uppercase tracking-widest ${themeTextMuted}`}>
-                        <Clock size={13} className="text-[#f59e0b]" /> Total Idle/Offline
+                      <p className={`text-[11px] font-bold flex items-center gap-1.5 uppercase tracking-widest ${themeTextMuted}`}>
+                        <Clock size={14} className="text-[#f59e0b]" /> Total Idle/Offline
                       </p>
-                      <p className={`font-data text-3xl font-extrabold mt-2 ${themeTextMain}`}>
-                        {monthlySummary.summary?.total_idle_hours?.toLocaleString() || 0} <span className={`text-lg font-semibold ${themeTextMuted}`}>hrs</span>
+                      <p className={`font-data text-4xl font-extrabold mt-3 ${themeTextMain}`}>
+                        {monthlySummary.summary?.total_idle_hours?.toLocaleString() || 0} <span className={`text-xl font-semibold ${themeTextMuted}`}>hrs</span>
                       </p>
-                    </div>
-                    <div className={`p-3 rounded-lg ${isDark ? 'bg-[#f59e0b]/10' : 'bg-amber-50'}`}>
-                      <Activity size={22} className="text-[#f59e0b]" />
                     </div>
                   </div>
-                  <p className={`text-xs mt-2 font-medium ${themeTextMuted}`}>Recorded idle &amp; shutdown hours</p>
+                  <p className={`text-[10px] font-medium mt-4 ${themeTextMuted}`}>Recorded idle &amp; shutdown hours</p>
                 </div>
 
-                <div className={`border rounded-xl p-6 shadow-sm transition-all group relative overflow-hidden ${themeCard} ${isDark ? 'hover:border-[#18a8c6]/50' : 'hover:border-[#18a8c6]/50 hover:shadow-md'}`}>
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[#18a8c6]" />
-                  <div className="flex justify-between items-start mb-2">
+                <div className={`border rounded-xl px-5 pt-5 pb-3 shadow-sm transition-all flex flex-col justify-between min-h-[140px] relative overflow-hidden ${themeCard}`}>
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-[#18a8c6]" />
+                  <div className="flex justify-between items-start">
                     <div>
-                      <p className={`text-[10px] font-bold flex items-center gap-2 uppercase tracking-widest ${themeTextMuted}`}>
-                        <AlertTriangle size={13} className={themeAccentText} /> Data Coverage
+                      <p className={`text-[11px] font-bold flex items-center gap-1.5 uppercase tracking-widest ${themeTextMuted}`}>
+                        <AlertTriangle size={14} className={themeAccentText} /> Data Coverage
                       </p>
-                      <p className={`font-data text-3xl font-extrabold mt-2 ${themeTextMain}`}>
+                      <p className={`font-data text-4xl font-extrabold mt-3 ${themeTextMain}`}>
                         {Math.round(monthlySummary.summary?.coverage || 0)}%
                       </p>
                     </div>
-                    <RadialGauge percentage={monthlySummary.summary?.coverage || 0} size={50} stroke={5} color={accentHex} trackColor={trackHex} isDark={isDark} />
+                    <RadialGauge percentage={monthlySummary.summary?.coverage || 0} size={54} stroke={5} color={accentHex} trackColor={trackHex} isDark={isDark} />
                   </div>
-                  <p className={`text-xs mt-2 font-medium ${themeTextMuted}`}>Active data coverage for this period</p>
+                  <p className={`text-[10px] font-medium mt-4 ${themeTextMuted}`}>Active data coverage for this period</p>
                 </div>
+
               </div>
             )}
 
-            <div className={`border rounded-xl p-4 shadow-sm flex flex-wrap justify-between items-center text-xs font-semibold ${themeCard} ${themeTextMuted}`}>
-              <div className="flex gap-6 items-center flex-wrap">
-                <span className={`flex items-center gap-1.5 px-2 py-1 rounded uppercase tracking-wider text-[10px] font-bold ${isDark ? 'text-[#18a8c6] bg-[#18a8c6]/10' : 'text-[#128a9c] bg-[#18a8c6]/10'}`}>
-                  <Power size={12} /> Live System
-                </span>
-                <span className="flex items-center gap-1.5 font-data">
-                  <Server size={14} className={themeTextMuted} />
-                  {selectedMachine ? `Machine ${String(selectedMachine).padStart(2, '0')}` : `Overall ${selectedPlant === 'plant1' ? 'Plant 1' : 'Plant 2'}`}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Factory size={14} className={themeTextMuted} />
-                  {selectedPlant === 'plant1' ? 'Plant 1' : 'Plant 2'}
-                </span>
-              </div>
+            <div className={`flex items-center gap-4 border rounded-xl px-5 py-3.5 shadow-sm flex-wrap transition-colors duration-300 ${themeCard}`}>
+              <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${isDark ? 'bg-[#18a8c6]/10 text-[#18a8c6]' : 'bg-[#18a8c6]/10 text-[#128a9c]'}`}>
+                <Power size={12} /> Live System
+              </span>
+              <span className={`w-px h-4 ${themeBorder} border-r`} />
+              <span className={`flex items-center gap-1.5 text-sm font-semibold whitespace-nowrap ${themeTextMuted}`}>
+                <Server size={14} className={themeAccentText} /> Overall {selectedPlant === 'plant1' ? 'Plant 1' : 'Plant 2'}
+              </span>
+              <span className={`w-px h-4 ${themeBorder} border-r`} />
+              <span className={`flex items-center gap-1.5 text-sm font-semibold whitespace-nowrap ${themeTextMain}`}>
+                <Folder size={14} className={themeAccentText} /> {selectedPlant === 'plant1' ? 'Plant 1' : 'Plant 2'}
+              </span>
             </div>
-
           </div>
         </div>
       </div>
-
+      
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-
         .font-ui { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-        .font-data {
-          font-family: 'JetBrains Mono', 'Courier New', monospace;
-          font-variant-numeric: tabular-nums;
-          letter-spacing: -0.01em;
-        }
-
+        .font-data { font-family: 'JetBrains Mono', 'Courier New', monospace; font-variant-numeric: tabular-nums; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #18a8c666; border-radius: 8px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #18a8c6; }
-
-        .theme-dark input[type="date"], .theme-dark select {
-          color-scheme: dark;
-        }
-        input[type="date"]::-webkit-calendar-picker-indicator {
-          cursor: pointer;
-          opacity: 0.6;
-          transition: 0.2s;
-          filter: ${isDark ? 'invert(1)' : 'none'};
-        }
-        input[type="date"]::-webkit-calendar-picker-indicator:hover {
-          opacity: 1;
-        }
+        .theme-dark input[type="date"], .theme-dark select { color-scheme: dark; }
       `}</style>
     </div>
   );
