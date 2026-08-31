@@ -33,6 +33,61 @@ const getActiveText = (employee) => {
     return "--";
 };
 
+const getInitials = (name) => {
+    const parts = String(name || "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (!parts.length) return "?";
+
+    if (parts.length === 1) {
+        return parts[0].slice(0, 2).toUpperCase();
+    }
+
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
+const EmployeeAvatar = ({ src, name }) => {
+    const [imageFailed, setImageFailed] = useState(false);
+
+    useEffect(() => {
+        setImageFailed(false);
+    }, [src]);
+
+    if (!src || imageFailed) {
+        return (
+            <span
+                className="attendance-employee-avatar-fallback"
+                aria-label={`${name || "Employee"} avatar`}
+            >
+                {getInitials(name)}
+            </span>
+        );
+    }
+
+    return (
+        <img
+            className="attendance-employee-avatar"
+            src={src}
+            alt={name || "Employee"}
+            loading="lazy"
+            decoding="async"
+            onError={() => setImageFailed(true)}
+        />
+    );
+};
+
+const getEmployeeRowKey = (employee, index) => {
+    const stableId =
+        employee?.paycode ||
+        employee?.cardNo ||
+        employee?.id ||
+        employee?.employeeId;
+
+    return stableId ? `${stableId}-${index}` : `attendance-row-${index}`;
+};
+
 const AttendanceDashboard = ({ onLogout }) => {
     const navigate = useNavigate();
 
@@ -183,6 +238,10 @@ const AttendanceDashboard = ({ onLogout }) => {
             currentPage * rowsPerPage
         );
 
+    // Keep the current rows visible while a refresh is happening.
+    // This prevents the table from flashing/blinking on re-fetch.
+    const initialLoading = loading && employees.length === 0;
+
     const percentage = (value) =>
         summary.total
             ? ((value / summary.total) * 100).toFixed(1)
@@ -313,7 +372,7 @@ const AttendanceDashboard = ({ onLogout }) => {
 
                                 <div>
                                     <p className="attendance-stat-label">{card.label}</p>
-                                    <h2>{loading ? "..." : card.value}</h2>
+                                    <h2>{initialLoading ? "..." : card.value}</h2>
                                     <span className="attendance-stat-note">{card.note}</span>
                                 </div>
                             </article>
@@ -402,7 +461,7 @@ const AttendanceDashboard = ({ onLogout }) => {
                         <table className="attendance-table">
                             <thead>
                                 <tr>
-                                    <th>Person</th>
+                                    <th className="attendance-person-column">Person</th>
                                     <th>Paycode</th>
                                     <th>Card No</th>
                                     <th>Department</th>
@@ -419,7 +478,7 @@ const AttendanceDashboard = ({ onLogout }) => {
                             </thead>
 
                             <tbody>
-                                {loading ? (
+                                {initialLoading ? (
                                     <tr>
                                         <td
                                             colSpan="13"
@@ -429,27 +488,24 @@ const AttendanceDashboard = ({ onLogout }) => {
                                         </td>
                                     </tr>
                                 ) : currentEmployees.length ? (
-                                    currentEmployees.map((employee) => {
+                                    currentEmployees.map((employee, index) => {
                                         const attPct = Number(employee.attendancePercentage || 0);
                                         const activeText = getActiveText(employee);
 
                                         return (
-                                            <tr key={employee.id}>
-                                                <td>
+                                            <tr key={getEmployeeRowKey(employee, (currentPage - 1) * rowsPerPage + index)}>
+                                                <td className="attendance-person-column">
                                                     <button
                                                         className="attendance-employee-button"
                                                         onClick={() => openEmployee(employee)}
                                                     >
-                                                        <img
-                                                            src={employee.avatar || "/default-avatar.png"}
-                                                            alt={employee.name}
-                                                            onError={(event) => {
-                                                                event.currentTarget.src = "/default-avatar.png";
-                                                            }}
+                                                        <EmployeeAvatar
+                                                            src={employee.avatar}
+                                                            name={employee.name}
                                                         />
 
                                                         <div>
-                                                            <strong>{show(employee.name)}</strong>
+                                                            <strong title={show(employee.name)}>{show(employee.name)}</strong>
                                                             <span>
                                                                 {show(employee.designation || employee.employeeType)}
                                                             </span>

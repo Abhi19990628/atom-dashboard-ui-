@@ -930,3 +930,71 @@ body {
     min-width: 0;
     width: 100%;
 }
+
+/* ==========================================================
+   PERSON COLUMN STABILITY FIX
+   Keeps the existing theme/colors/fonts unchanged.
+   - prevents broken avatar retry blinking
+   - gives Person enough width so names do not get squeezed
+   ========================================================== */
+
+.attendance-table {
+    min-width: 1500px;
+}
+
+.attendance-table th.attendance-person-column,
+.attendance-table td.attendance-person-column {
+    width: 230px;
+    min-width: 230px;
+    max-width: 230px;
+}
+
+.attendance-employee-button {
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+.attendance-employee-avatar,
+.attendance-employee-avatar-fallback {
+    width: 37px;
+    height: 37px;
+    flex: 0 0 37px;
+    border: 2px solid rgba(34, 211, 238, .30);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(34, 211, 238, .045);
+}
+
+.attendance-employee-avatar {
+    display: block;
+    object-fit: cover;
+    background: #e2e8f0;
+}
+
+.attendance-employee-avatar-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(34, 211, 238, .10);
+    color: var(--att-cyan);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .25px;
+    user-select: none;
+}
+
+.attendance-employee-button div {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.attendance-employee-button strong,
+.attendance-employee-button span:not(.attendance-employee-avatar-fallback) {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+

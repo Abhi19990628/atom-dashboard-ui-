@@ -33,6 +33,48 @@ import "./EmployeeAttendanceProfile.css";
 const show = (value, fallback = "--") =>
     value === undefined || value === null || value === "" ? fallback : value;
 
+const getInitials = (name) => {
+    const parts = String(name || "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (!parts.length) return "?";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
+const SafeProfileImage = ({ src, name, className = "eap-profile-image" }) => {
+    const [imageFailed, setImageFailed] = useState(false);
+
+    useEffect(() => {
+        setImageFailed(false);
+    }, [src]);
+
+    if (!src || imageFailed) {
+        return (
+            <span
+                className={`${className} eap-profile-image-fallback`}
+                aria-label={`${name || "Employee"} avatar`}
+            >
+                {getInitials(name)}
+            </span>
+        );
+    }
+
+    return (
+        <img
+            className={className}
+            src={src}
+            alt={name || "Employee"}
+            loading="lazy"
+            decoding="async"
+            onError={() => setImageFailed(true)}
+        />
+    );
+};
+
 const monthLabel = (date) =>
     date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
@@ -406,11 +448,9 @@ const EmployeeAttendanceProfile = ({ onLogout }) => {
 
                 <section className="eap-employee-header" ref={overviewRef}>
                     <div className="eap-employee-main">
-                        <img
-                            className="eap-profile-image"
-                            src={profile.avatar || "/default-avatar.png"}
-                            alt={profile.name}
-                            onError={(event) => { event.currentTarget.src = "/default-avatar.png"; }}
+                        <SafeProfileImage
+                            src={profile.avatar}
+                            name={profile.name}
                         />
 
                         <div className="eap-employee-info">
