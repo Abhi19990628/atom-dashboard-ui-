@@ -369,7 +369,7 @@ function App() {
             <Route
               path="/idle-case"
               element={
-                <ProtectedRoute allowedGroup="Idle_Reason_Responder">
+                <ProtectedRoute adminOnly={true}>
                   <IdleCase onLogout={handleLogout} />
                 </ProtectedRoute>
               }
