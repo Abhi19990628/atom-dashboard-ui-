@@ -842,7 +842,7 @@ export default function Profile({ onLogout }) {
   });
 
   const { setUser } = useUser();
-  const API_URL = "http://192.168.0.34:8000/api/profile/me/";
+  const API_URL = process.env.REACT_APP_API_URL + '/api/profile/me/' || 'http://localhost:9000/api/profile/me/';
   console.log("Auth Token:", authToken);
 
   useEffect(() => {

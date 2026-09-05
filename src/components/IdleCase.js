@@ -635,7 +635,7 @@ import {
   FaIndustry,
 } from 'react-icons/fa';
 
-const API_BASE = "http://127.0.0.1:9000/api";
+const API_BASE = process.env.REACT_APP_API_URL + '/api' || 'http://localhost:9000/api';
 
 // ============================================================
 // SAME IDLE REASONS AS PLANT 1 LIVE
