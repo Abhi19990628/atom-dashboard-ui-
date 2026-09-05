@@ -2091,7 +2091,7 @@ export default function Plant1Live() {
               }
             }
           );
-
+       #amanpal
 
         const autoData =
           await autoResponse.json();
